@@ -1,8 +1,8 @@
-#include <type_traits>
-#include <cstdint>
 #include <cmath>
-#include <numeric>
+#include <cstdint>
 #include <iostream>
+#include <numeric>
+#include <type_traits>
 
 template <class T = int64_t, class = typename std::enable_if<std::is_integral<T>::value>::type>
 class Rational {
@@ -16,10 +16,10 @@ public:
     }
 
     Rational(T num, T denom): numerator(num), denominator(denom) {
-        reduce();
+        _Reduce();
     }
 
-    void reduce() {
+    void _Reduce() {
         if (denominator < 0) {
             denominator *= -1;
             numerator *= -1;
@@ -31,7 +31,7 @@ public:
         denominator /= temp;
     }
 
-    T get_numerator() const {
+    T GetNumerator() const {
         T temp = std::gcd(numerator, denominator);
 
         if (denominator < 0) {
@@ -41,17 +41,35 @@ public:
         return numerator / temp;
     }
 
-    T get_denominator() const {
+    T GetDenominator() const {
         T temp = std::gcd(numerator, denominator);
         return std::abs(denominator / temp);
     }
 
-    std::pair<T, T> get_pair() const {
+    std::pair<T, T> GetPair() const {
         return {numerator, denominator};
     };
 
+    void Invert() {
+        std::swap(numerator, denominator);
+        _Reduce();
+    }
+
+    Rational Inverted() const {
+        Rational temp = *this;
+
+        temp.Invert();
+
+        temp._Reduce();
+        return temp;
+    }
+
+    long double Eval() const {
+        return static_cast<double>(numerator) / denominator;
+    }
+
     Rational& operator + () {
-        reduce();
+        _Reduce();
         return *this;
     }
 
@@ -59,7 +77,7 @@ public:
         Rational temp = *this;
         temp.numerator *= -1;
 
-        temp.reduce();
+        temp._Reduce();
         return temp;
     }
 
@@ -67,7 +85,7 @@ public:
         this->numerator = other.numerator;
         this->denominator = other.denominator;
 
-        reduce();
+        _Reduce();
         return *this;
     }
 
@@ -79,7 +97,7 @@ public:
         result.denominator = temp;
         result.numerator += temp / other.denominator * other.numerator;
 
-        result.reduce();
+        result._Reduce();
         return result;
     }
 
@@ -91,22 +109,8 @@ public:
         result.denominator = temp;
         result.numerator -= temp / other.denominator * other.numerator;
 
-        result.reduce();
+        result._Reduce();
         return result;
-    }
-
-    void reverse() {
-        std::swap(numerator, denominator);
-        reduce();
-    }
-
-    Rational reversed() const {
-        Rational temp = *this;
-
-        temp.reverse();
-
-        temp.reduce();
-        return temp;
     }
 
     Rational operator * (const Rational& other) const {
@@ -115,12 +119,12 @@ public:
         temp.numerator *= other.numerator;
         temp.denominator *= other.denominator;
 
-        temp.reduce();
+        temp._Reduce();
         return temp;
     }
 
     Rational operator / (const Rational& other) const {
-        return *this * other.reversed();
+        return *this * other.Inverted();
     }
 
     Rational& operator += (const Rational& other) {
@@ -196,10 +200,6 @@ public:
     friend std::ostream& operator << (std::ostream& out, const Rational& other) {
         out << other.numerator << '/' << other.denominator;
         return out;
-    }
-
-    long double eval() const {
-        return static_cast<double>(numerator) / denominator;
     }
 };
 
