@@ -4,20 +4,11 @@
 #include <numeric>
 #include <type_traits>
 
-template <class T = int64_t, class = typename std::enable_if<std::is_integral<T>::value>::type>
+namespace GB {
+
+template<class IntegerType = int64_t, class = typename std::enable_if<std::is_integral<IntegerType>::value>::type>
 class Rational {
-    T numerator, denominator;
-
-public:
-    Rational(): numerator(0), denominator(1) {
-    }
-
-    Rational(T num): numerator(num), denominator(1) {
-    }
-
-    Rational(T num, T denom): numerator(num), denominator(denom) {
-        _Reduce();
-    }
+    IntegerType numerator, denominator;
 
     void _Reduce() {
         if (denominator < 0) {
@@ -25,14 +16,25 @@ public:
             numerator *= -1;
         }
 
-        T temp = std::gcd(numerator, denominator);
+        IntegerType temp = std::gcd(numerator, denominator);
 
         numerator /= temp;
         denominator /= temp;
     }
 
-    T GetNumerator() const {
-        T temp = std::gcd(numerator, denominator);
+public:
+    Rational() : numerator(0), denominator(1) {
+    }
+
+    Rational(IntegerType num) : numerator(num), denominator(1) {
+    }
+
+    Rational(IntegerType num, IntegerType denom) : numerator(num), denominator(denom) {
+        _Reduce();
+    }
+
+    IntegerType GetNumerator() const {
+        IntegerType temp = std::gcd(numerator, denominator);
 
         if (denominator < 0) {
             return numerator / temp * -1;
@@ -41,12 +43,12 @@ public:
         return numerator / temp;
     }
 
-    T GetDenominator() const {
-        T temp = std::gcd(numerator, denominator);
+    IntegerType GetDenominator() const {
+        IntegerType temp = std::gcd(numerator, denominator);
         return std::abs(denominator / temp);
     }
 
-    std::pair<T, T> GetPair() const {
+    std::pair<IntegerType, IntegerType> GetPair() const {
         return {numerator, denominator};
     };
 
@@ -68,12 +70,12 @@ public:
         return static_cast<double>(numerator) / denominator;
     }
 
-    Rational& operator + () {
+    Rational &operator+() {
         _Reduce();
         return *this;
     }
 
-    Rational operator - () {
+    Rational operator-() {
         Rational temp = *this;
         temp.numerator *= -1;
 
@@ -81,7 +83,7 @@ public:
         return temp;
     }
 
-    Rational& operator = (const Rational& other) {
+    Rational &operator=(const Rational &other) {
         this->numerator = other.numerator;
         this->denominator = other.denominator;
 
@@ -89,7 +91,7 @@ public:
         return *this;
     }
 
-    Rational operator + (const Rational& other) const {
+    Rational operator+(const Rational &other) const {
         Rational result = *this;
 
         int64_t temp = std::lcm(result.denominator, other.denominator);
@@ -101,7 +103,7 @@ public:
         return result;
     }
 
-    Rational operator - (const Rational& other) const {
+    Rational operator-(const Rational &other) const {
         Rational result = *this;
 
         int64_t temp = std::lcm(result.denominator, other.denominator);
@@ -113,7 +115,7 @@ public:
         return result;
     }
 
-    Rational operator * (const Rational& other) const {
+    Rational operator*(const Rational &other) const {
         Rational temp = *this;
 
         temp.numerator *= other.numerator;
@@ -123,102 +125,104 @@ public:
         return temp;
     }
 
-    Rational operator / (const Rational& other) const {
+    Rational operator/(const Rational &other) const {
         return *this * other.Inverted();
     }
 
-    Rational& operator += (const Rational& other) {
+    Rational &operator+=(const Rational &other) {
         *this = *this + other;
         return *this;
     }
 
-    Rational& operator -= (const Rational& other) {
+    Rational &operator-=(const Rational &other) {
         *this = *this - other;
         return *this;
     }
 
-    Rational& operator *= (const Rational& other) {
+    Rational &operator*=(const Rational &other) {
         *this = *this * other;
         return *this;
     }
 
-    Rational& operator /= (const Rational& other) {
+    Rational &operator/=(const Rational &other) {
         *this = *this / other;
         return *this;
     }
 
-    bool operator == (const Rational& other) const {
+    bool operator==(const Rational &other) const {
         return numerator == other.numerator && denominator == other.denominator;
     }
 
-    bool operator != (const Rational& other) const {
+    bool operator!=(const Rational &other) const {
         return numerator != other.numerator || denominator != other.denominator;
     }
 
-    bool operator < (const Rational& other) const {
+    bool operator<(const Rational &other) const {
         int64_t temp = std::lcm(denominator, other.denominator);
         return (numerator * (temp / denominator)) < (other.numerator * (temp / other.denominator));
     }
 
-    bool operator > (const Rational& other) const {
+    bool operator>(const Rational &other) const {
         int64_t temp = std::lcm(denominator, other.denominator);
         return (numerator * (temp / denominator)) > (other.numerator * (temp / other.denominator));
     }
 
-    bool operator <= (const Rational& other) const {
+    bool operator<=(const Rational &other) const {
         int64_t temp = std::lcm(denominator, other.denominator);
         return (numerator * (temp / denominator)) <= (other.numerator * (temp / other.denominator));
     }
 
-    bool operator >= (const Rational& other) const {
+    bool operator>=(const Rational &other) const {
         int64_t temp = std::lcm(denominator, other.denominator);
         return (numerator * (temp / denominator)) >= (other.numerator * (temp / other.denominator));
     }
 
-    Rational operator ++(int) {
+    Rational operator++(int) {
         Rational temp = *this;
         *this += 1;
         return temp;
     }
 
-    Rational& operator ++() {
+    Rational &operator++() {
         *this += 1;
         return *this;
     }
 
-    Rational operator --(int) {
+    Rational operator--(int) {
         Rational temp = *this;
         *this -= 1;
         return temp;
     }
 
-    Rational& operator --() {
+    Rational &operator--() {
         *this -= 1;
         return *this;
     }
 
-    friend std::ostream& operator << (std::ostream& out, const Rational& other) {
+    friend std::ostream &operator<<(std::ostream &out, const Rational &other) {
         out << other.numerator << '/' << other.denominator;
         return out;
     }
 };
 
-template <class T = int64_t, class = typename std::enable_if<std::is_integral<T>::value>::type>
-Rational<T> operator + (int64_t left, const Rational<T>& other) {
+template<class T = int64_t, class = typename std::enable_if<std::is_integral<T>::value>::type>
+Rational<T> operator+(int64_t left, const Rational<T> &other) {
     return other + left;
 }
 
-template <class T = int64_t, class = typename std::enable_if<std::is_integral<T>::value>::type>
-Rational<T> operator - (int64_t left, const Rational<T>& other) {
+template<class T = int64_t, class = typename std::enable_if<std::is_integral<T>::value>::type>
+Rational<T> operator-(int64_t left, const Rational<T> &other) {
     return other - left;
 }
 
-template <class T = int64_t, class = typename std::enable_if<std::is_integral<T>::value>::type>
-Rational<T> operator * (int64_t left, const Rational<T>& other) {
+template<class T = int64_t, class = typename std::enable_if<std::is_integral<T>::value>::type>
+Rational<T> operator*(int64_t left, const Rational<T> &other) {
     return other * left;
 }
 
-template <class T = int64_t, class = typename std::enable_if<std::is_integral<T>::value>::type>
-Rational<T> operator / (int64_t left, const Rational<T>& other) {
+template<class T = int64_t, class = typename std::enable_if<std::is_integral<T>::value>::type>
+Rational<T> operator/(int64_t left, const Rational<T> &other) {
     return other / left;
 }
+
+} // GB namespace
