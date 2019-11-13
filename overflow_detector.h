@@ -122,8 +122,6 @@ public:
             }
         }
 
-
-
         value_ /= other.value_;
         
         return *this;
