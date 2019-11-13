@@ -106,9 +106,23 @@ public:
     }
 
     OverflowDetector &operator /=(const OverflowDetector& other) {
+        IntegerType offset = maxValue_ + minValue_;
+
         if (other.value_ == 0) {
             throw std::overflow_error("");
         }
+
+        if (offset > 0) {
+            if ((value_ == -1 && other.value_ == maxValue_) || (value_ == maxValue_ && other.value_ == -1)) {
+                throw std::underflow_error("");
+            }
+        } else if (offset < 0) {
+            if ((value_ == -1 && other.value_ == minValue_) || (value_ == minValue_ && other.value_ == -1)) {
+                throw std::overflow_error("");
+            }
+        }
+
+
 
         value_ /= other.value_;
         
