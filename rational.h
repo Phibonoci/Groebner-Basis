@@ -28,8 +28,8 @@ public:
         if (denominator_ == 0) {
             throw std::overflow_error("Divide by zero exception");
         }
-        _Reduce();
-        _CheckInvariants();
+        Reduce_();
+        CheckInvariants_();
     }
 
     IntegerType GetNumerator() const {
@@ -45,8 +45,8 @@ public:
             throw std::overflow_error("Divide by zero exception");
         }
         std::swap(numerator_, denominator_);
-        _Reduce();
-        _CheckInvariants();
+        Reduce_();
+        CheckInvariants_();
     }
 
     Rational GetInverted() const {
@@ -57,16 +57,13 @@ public:
     }
 
     explicit operator double() const {
-        if (denominator_ == 0) {
-            throw std::overflow_error("Divide by zero exception");
-        }
+        assert(denominator_ != 0);
         return static_cast<double>(numerator_) / denominator_;
     }
 
     Rational operator+() const {
         Rational result = *this;
 
-        result._CheckInvariants();
         return result;
     }
 
@@ -74,7 +71,6 @@ public:
         Rational result = *this;
         result.numerator_ *= -1;
 
-        result._CheckInvariants();
         return result;
     }
 
@@ -86,8 +82,8 @@ public:
         denominator_ = denominators_lcm;
         numerator_ += denominators_lcm / other.denominator_ * other.numerator_;
 
-        _Reduce();
-        _CheckInvariants();
+        Reduce_();
+        CheckInvariants_();
         return *this;
     }
 
@@ -99,8 +95,8 @@ public:
         denominator_ = denominators_lcm;
         numerator_ -= denominators_lcm / other.denominator_ * other.numerator_;
 
-        _Reduce();
-        _CheckInvariants();
+        Reduce_();
+        CheckInvariants_();
         return *this;
     }
 
@@ -108,8 +104,8 @@ public:
         numerator_ *= other.numerator_;
         denominator_ *= other.denominator_;
 
-        _Reduce();
-        _CheckInvariants();
+        Reduce_();
+        CheckInvariants_();
         return *this;
     }
 
@@ -117,8 +113,8 @@ public:
         numerator_ *= other.denominator_;
         denominator_ *= other.numerator_;
 
-        _Reduce();
-        _CheckInvariants();
+        Reduce_();
+        CheckInvariants_();
         return *this;
     }
 
@@ -157,8 +153,8 @@ public:
     // We need to check both invariants, because (-5 / 5 == 1 / -1)
 
     friend bool operator==(const Rational &lhs, const Rational &rhs) {
-        lhs._CheckInvariants();
-        rhs._CheckInvariants();
+        lhs.CheckInvariants_();
+        rhs.CheckInvariants_();
 
         return lhs.numerator_ == rhs.numerator_ && lhs.denominator_ == rhs.denominator_;
     }
@@ -168,8 +164,8 @@ public:
     }
 
     friend bool operator<(const Rational &lhs, const Rational &rhs) {
-        lhs._CheckInvariants();
-        rhs._CheckInvariants();
+        lhs.CheckInvariants_();
+        rhs.CheckInvariants_();
 
         int64_t denominators_lcm = std::lcm(lhs.denominator_, rhs.denominator_);
         return (lhs.numerator_ * (denominators_lcm / lhs.denominator_)) <
@@ -195,7 +191,7 @@ public:
 
 private:
     // This function keeps class invariants correct.
-    void _Reduce() {
+    void Reduce_() {
         if (denominator_ < 0) {
             denominator_ *= -1;
             numerator_ *= -1;
@@ -208,7 +204,7 @@ private:
     }
 
     // This function checks class invariants.
-    void _CheckInvariants() const {
+    void CheckInvariants_() const {
         assert(denominator_ > 0);
         assert(std::gcd(numerator_, denominator_) == 1);
     }
