@@ -9,8 +9,6 @@
 
 namespace GB {
 
-using namespace std::string_literals;
-
 template<class IntegerType = int64_t, class = typename std::enable_if_t<std::is_integral_v<IntegerType>>>
 class OverflowDetector {
 public:
@@ -18,112 +16,144 @@ public:
     OverflowDetector(IntegerType value) : value_(value) {
     }
 
-    IntegerType GetValue() const {
-        return value_;
-    }
-
-    static IntegerType GetMaxValue() {
+    constexpr static IntegerType GetMaxValue() {
         return std::numeric_limits<IntegerType>::max();
     }
 
-    static IntegerType GetMinValue() {
+    constexpr static IntegerType GetMinValue() {
         return std::numeric_limits<IntegerType>::min();
+    }
+
+    explicit operator IntegerType() const {
+        return value_;
     }
 
     OverflowDetector operator+() const {
         OverflowDetector result = *this;
+
         return result;
     }
 
+    static constexpr bool IsUnaryMinusOverflow(IntegerType value) {
+        constexpr IntegerType offset = maxValue_ + minValue_;
+
+        if (offset < 0 && value == minValue_) {
+            return true;
+        }
+
+        if (offset > 0 && value == maxValue_) {
+            return true;
+        }
+
+        return false;
+    }
+
     OverflowDetector operator-() const {
+        assert(!IsUnaryMinusOverflow(value_));
         OverflowDetector result = *this;
-
-        IntegerType offset = maxValue_ + minValue_;
-
-        if (offset < 0 && value_ == minValue_) {
-            throw std::overflow_error("");
-        }
-
-        if (offset > 0 && value_ == maxValue_) {
-            throw std::underflow_error("");
-        }
 
         return result.value_ * -1;
     }
 
-    OverflowDetector &operator +=(const OverflowDetector& other) {
-        if (other > 0 && (value_ > maxValue_ - other.value_)) {
-            throw std::overflow_error("");
+    static constexpr bool IsAdditionOverflow(IntegerType lhs, IntegerType rhs) {
+        if (rhs > 0 && (lhs > maxValue_ - rhs)) {
+            return true;
         }
-        if (other < 0 && (value_ < minValue_ + other.value_)) {
-            throw std::underflow_error("");
+        if (rhs < 0 && (lhs < minValue_ - rhs)) {
+            return true;
         }
 
+        return false;
+    }
+
+    OverflowDetector &operator +=(const OverflowDetector& other) {
+        assert(!IsAdditionOverflow(value_, other.value_));
         value_ += other.value_;
+
         return *this;
+    }
+
+    static constexpr bool IsSubtractionOverflow(IntegerType lhs, IntegerType rhs) {
+        if (rhs < 0 && (lhs > maxValue_ + rhs)) {
+            return true;
+        }
+        if (rhs > 0 && (lhs < minValue_ + rhs)) {
+            return true;
+        }
+
+        return false;
     }
 
     OverflowDetector &operator -=(const OverflowDetector& other) {
-        if (other < 0 && (value_ > maxValue_ - other.value_)) {
-            throw std::overflow_error("");
-        }
-        if (other > 0 && (value_ < minValue_ + other.value_)) {
-            throw std::underflow_error("");
-        }
-
+        assert(!IsSubtractionOverflow(value_, other.value_));
         value_ -= other.value_;
+
         return *this;
     }
 
-    OverflowDetector &operator *=(const OverflowDetector& other) {
-        IntegerType offset = maxValue_ + minValue_;
+    static constexpr bool IsMultiplicationOverflow(IntegerType lhs, IntegerType rhs) {
+        constexpr IntegerType offset = maxValue_ + minValue_;
+
+        if (lhs == 0 || rhs == 0) {
+            return false;
+        }
 
         if (offset > 0) {
-            if ((other.value_ == -1 && value_ == maxValue_) || (other.value_ == maxValue_ && value_ == -1)) {
-                throw std::underflow_error("");
+            if ((rhs == -1 && lhs == maxValue_) || (rhs == maxValue_ && lhs == -1)) {
+                return true;
             }
         } else if (offset < 0) {
-            if ((other.value_ == -1 && value_ == minValue_) || (other.value_ == minValue_ && value_ == -1)) {
-                throw std::overflow_error("");
+            if ((rhs == -1 && lhs == minValue_) || (rhs == minValue_ && lhs == -1)) {
+                return true;
             }
         }
 
-        if ((value_ < 0 && other.value_ < 0) || (value_ > 0 && other.value_ > 0)) {
-            if (value_ > maxValue_ / other.value_) {
-                throw std::overflow_error("");
+        if (lhs < 0) {
+            if (rhs < 0) {
+                return lhs < maxValue_ / rhs;
+            } else {
+                return lhs < minValue_ / rhs;
+            }
+        } else {
+            if (rhs < 0) {
+                return lhs > minValue_ / rhs;
+            } else {
+                return lhs > maxValue_ / rhs;
             }
         }
+    }
 
-        if ((value_ > 0 && other.value_ < 0) || (value_ < 0 && other.value_ > 0)) {
-            if (value_ > minValue_ / other.value_) {
-                throw std::underflow_error("");
-            }
-        }
-
+    OverflowDetector &operator *=(const OverflowDetector& other) {
+        assert(!IsMultiplicationOverflow(value_, other.value_));
         value_ *= other.value_;
 
         return *this;
     }
 
-    OverflowDetector &operator /=(const OverflowDetector& other) {
-        IntegerType offset = maxValue_ + minValue_;
+    static constexpr bool IsDivisionOverflow(IntegerType lhs, IntegerType rhs) {
+        constexpr IntegerType offset = maxValue_ + minValue_;
 
-        if (other.value_ == 0) {
-            throw std::overflow_error("");
+        if (rhs == 0) {
+            return true;
         }
 
         if (offset > 0) {
-            if ((value_ == -1 && other.value_ == maxValue_) || (value_ == maxValue_ && other.value_ == -1)) {
-                throw std::underflow_error("");
+            if ((lhs == -1 && rhs == maxValue_) || (lhs == maxValue_ && rhs == -1)) {
+                return true;
             }
         } else if (offset < 0) {
-            if ((value_ == -1 && other.value_ == minValue_) || (value_ == minValue_ && other.value_ == -1)) {
-                throw std::overflow_error("");
+            if ((lhs == -1 && rhs == minValue_) || (lhs == minValue_ && rhs == -1)) {
+                return true;
             }
         }
 
+        return false;
+    }
+
+    OverflowDetector &operator /=(const OverflowDetector& other) {
+        assert(!IsDivisionOverflow(value_, other.value_));
         value_ /= other.value_;
-        
+
         return *this;
     }
 
@@ -180,10 +210,10 @@ public:
     }
     
 private:
-    IntegerType value_;
+    static constexpr IntegerType minValue_ = std::numeric_limits<IntegerType>::min();
+    static constexpr IntegerType maxValue_ = std::numeric_limits<IntegerType>::max();
 
-    IntegerType minValue_ = std::numeric_limits<IntegerType>::min();
-    IntegerType maxValue_ = std::numeric_limits<IntegerType>::max();
+    IntegerType value_;
 };
 
 } // namespace GB
