@@ -208,7 +208,7 @@ public:
     friend bool operator>=(const OverflowDetector &lhs, const OverflowDetector &rhs) {
         return !(lhs < rhs);
     }
-    
+
 private:
     static constexpr IntegerType minValue_ = std::numeric_limits<IntegerType>::min();
     static constexpr IntegerType maxValue_ = std::numeric_limits<IntegerType>::max();
