@@ -16,133 +16,133 @@ public:
     OverflowDetector(IntegerType value) : value_(value) {
     }
 
-    constexpr static IntegerType GetMaxValue() {
-        return std::numeric_limits<IntegerType>::max();
+    constexpr static IntegerType GetMaxValue() noexcept {
+        return kMaxValue;
     }
 
-    constexpr static IntegerType GetMinValue() {
-        return std::numeric_limits<IntegerType>::min();
+    constexpr static IntegerType GetMinValue() noexcept {
+        return kMinValue;
     }
 
-    explicit operator IntegerType() const {
+    explicit operator IntegerType() const noexcept {
         return value_;
     }
 
-    OverflowDetector operator+() const {
+    OverflowDetector operator+() const noexcept {
         OverflowDetector result = *this;
 
         return result;
     }
 
-    static constexpr bool IsUnaryMinusOverflow(IntegerType value) {
-        constexpr IntegerType offset = maxValue_ + minValue_;
+    static constexpr bool DoesUnaryMinusOverflow(IntegerType value) noexcept {
+        constexpr IntegerType offset = kMaxValue + kMinValue;
 
-        if (offset < 0 && value == minValue_) {
+        if (offset < 0 && value == kMinValue) {
             return true;
         }
 
-        if (offset > 0 && value == maxValue_) {
+        if (offset > 0 && value == kMaxValue) {
             return true;
         }
 
         return false;
     }
 
-    OverflowDetector operator-() const {
-        assert(!IsUnaryMinusOverflow(value_));
+    OverflowDetector operator-() const noexcept {
+        assert(!DoesUnaryMinusOverflow(value_));
         OverflowDetector result = *this;
 
         return result.value_ * -1;
     }
 
-    static constexpr bool IsAdditionOverflow(IntegerType lhs, IntegerType rhs) {
-        if (rhs > 0 && (lhs > maxValue_ - rhs)) {
+    static constexpr bool DoesAdditionOverflow(IntegerType lhs, IntegerType rhs) noexcept {
+        if (rhs > 0 && (lhs > kMaxValue - rhs)) {
             return true;
         }
-        if (rhs < 0 && (lhs < minValue_ - rhs)) {
+        if (rhs < 0 && (lhs < kMinValue - rhs)) {
             return true;
         }
 
         return false;
     }
 
-    OverflowDetector &operator +=(const OverflowDetector& other) {
-        assert(!IsAdditionOverflow(value_, other.value_));
+    OverflowDetector &operator+=(const OverflowDetector& other) noexcept {
+        assert(!DoesAdditionOverflow(value_, other.value_));
         value_ += other.value_;
 
         return *this;
     }
 
-    static constexpr bool IsSubtractionOverflow(IntegerType lhs, IntegerType rhs) {
-        if (rhs < 0 && (lhs > maxValue_ + rhs)) {
+    static constexpr bool DoesSubtractionOverflow(IntegerType lhs, IntegerType rhs) noexcept {
+        if (rhs < 0 && (lhs > kMaxValue + rhs)) {
             return true;
         }
-        if (rhs > 0 && (lhs < minValue_ + rhs)) {
+        if (rhs > 0 && (lhs < kMinValue + rhs)) {
             return true;
         }
 
         return false;
     }
 
-    OverflowDetector &operator -=(const OverflowDetector& other) {
-        assert(!IsSubtractionOverflow(value_, other.value_));
+    OverflowDetector &operator-=(const OverflowDetector& other) noexcept {
+        assert(!DoesSubtractionOverflow(value_, other.value_));
         value_ -= other.value_;
 
         return *this;
     }
 
-    static constexpr bool IsMultiplicationOverflow(IntegerType lhs, IntegerType rhs) {
-        constexpr IntegerType offset = maxValue_ + minValue_;
+    static constexpr bool DoesMultiplicationOverflow(IntegerType lhs, IntegerType rhs) noexcept {
+        constexpr IntegerType offset = kMaxValue + kMinValue;
 
         if (lhs == 0 || rhs == 0) {
             return false;
         }
 
         if (offset > 0) {
-            if ((rhs == -1 && lhs == maxValue_) || (rhs == maxValue_ && lhs == -1)) {
+            if ((rhs == -1 && lhs == kMaxValue) || (rhs == kMaxValue && lhs == -1)) {
                 return true;
             }
         } else if (offset < 0) {
-            if ((rhs == -1 && lhs == minValue_) || (rhs == minValue_ && lhs == -1)) {
+            if ((rhs == -1 && lhs == kMinValue) || (rhs == kMinValue && lhs == -1)) {
                 return true;
             }
         }
 
         if (lhs < 0) {
             if (rhs < 0) {
-                return lhs < maxValue_ / rhs;
+                return lhs < kMaxValue / rhs;
             } else {
-                return lhs < minValue_ / rhs;
+                return lhs < kMinValue / rhs;
             }
         } else {
             if (rhs < 0) {
-                return lhs > minValue_ / rhs;
+                return lhs > kMinValue / rhs;
             } else {
-                return lhs > maxValue_ / rhs;
+                return lhs > kMaxValue / rhs;
             }
         }
     }
 
-    OverflowDetector &operator *=(const OverflowDetector& other) {
-        assert(!IsMultiplicationOverflow(value_, other.value_));
+    OverflowDetector &operator*=(const OverflowDetector& other) noexcept {
+        assert(!DoesMultiplicationOverflow(value_, other.value_));
         value_ *= other.value_;
 
         return *this;
     }
 
-    static constexpr bool IsDivisionOverflow(IntegerType lhs, IntegerType rhs) {
-        constexpr IntegerType offset = maxValue_ + minValue_;
+    static constexpr bool DoesDivisionOverflow(IntegerType lhs, IntegerType rhs) noexcept {
+        constexpr IntegerType offset = kMaxValue + kMinValue;
 
         if (rhs == 0) {
             return true;
         }
 
         if (offset > 0) {
-            if ((lhs == -1 && rhs == maxValue_) || (lhs == maxValue_ && rhs == -1)) {
+            if ((lhs == -1 && rhs == kMaxValue) || (lhs == kMaxValue && rhs == -1)) {
                 return true;
             }
         } else if (offset < 0) {
-            if ((lhs == -1 && rhs == minValue_) || (lhs == minValue_ && rhs == -1)) {
+            if ((lhs == -1 && rhs == kMinValue) || (lhs == kMinValue && rhs == -1)) {
                 return true;
             }
         }
@@ -150,68 +150,68 @@ public:
         return false;
     }
 
-    OverflowDetector &operator /=(const OverflowDetector& other) {
-        assert(!IsDivisionOverflow(value_, other.value_));
+    OverflowDetector &operator/=(const OverflowDetector& other) noexcept {
+        assert(!DoesDivisionOverflow(value_, other.value_));
         value_ /= other.value_;
 
         return *this;
     }
 
-    friend OverflowDetector operator+(const OverflowDetector &lhs, const OverflowDetector &rhs) {
+    friend OverflowDetector operator+(const OverflowDetector &lhs, const OverflowDetector &rhs) noexcept {
         OverflowDetector result = lhs;
         result += rhs;
 
         return result;
     }
 
-    friend OverflowDetector operator-(const OverflowDetector &lhs, const OverflowDetector &rhs) {
+    friend OverflowDetector operator-(const OverflowDetector &lhs, const OverflowDetector &rhs) noexcept {
         OverflowDetector result = lhs;
         result -= rhs;
 
         return result;
     }
 
-    friend OverflowDetector operator*(const OverflowDetector &lhs, const OverflowDetector &rhs) {
+    friend OverflowDetector operator*(const OverflowDetector &lhs, const OverflowDetector &rhs) noexcept {
         OverflowDetector result = lhs;
         result *= rhs;
 
         return result;
     }
 
-    friend OverflowDetector operator/(const OverflowDetector &lhs, const OverflowDetector &rhs) {
+    friend OverflowDetector operator/(const OverflowDetector &lhs, const OverflowDetector &rhs) noexcept {
         OverflowDetector result = lhs;
         result /= rhs;
 
         return result;
     }
 
-    friend bool operator==(const OverflowDetector &lhs, const OverflowDetector &rhs) {
+    friend bool operator==(const OverflowDetector &lhs, const OverflowDetector &rhs) noexcept {
         return lhs.value_ == rhs.value_;
     }
 
-    friend bool operator!=(const OverflowDetector &lhs, const OverflowDetector &rhs) {
+    friend bool operator!=(const OverflowDetector &lhs, const OverflowDetector &rhs) noexcept {
         return !(lhs == rhs);
     }
 
-    friend bool operator<(const OverflowDetector &lhs, const OverflowDetector &rhs) {
+    friend bool operator<(const OverflowDetector &lhs, const OverflowDetector &rhs) noexcept {
         return lhs.value_ < rhs.value_;
     }
 
-    friend bool operator>(const OverflowDetector &lhs, const OverflowDetector &rhs) {
+    friend bool operator>(const OverflowDetector &lhs, const OverflowDetector &rhs) noexcept {
         return rhs < lhs;
     }
 
-    friend bool operator<=(const OverflowDetector &lhs, const OverflowDetector &rhs) {
+    friend bool operator<=(const OverflowDetector &lhs, const OverflowDetector &rhs) noexcept {
         return !(rhs < lhs);
     }
 
-    friend bool operator>=(const OverflowDetector &lhs, const OverflowDetector &rhs) {
+    friend bool operator>=(const OverflowDetector &lhs, const OverflowDetector &rhs) noexcept {
         return !(lhs < rhs);
     }
 
 private:
-    static constexpr IntegerType minValue_ = std::numeric_limits<IntegerType>::min();
-    static constexpr IntegerType maxValue_ = std::numeric_limits<IntegerType>::max();
+    static constexpr IntegerType kMinValue = std::numeric_limits<IntegerType>::min();
+    static constexpr IntegerType kMaxValue = std::numeric_limits<IntegerType>::max();
 
     IntegerType value_;
 };

@@ -34,18 +34,18 @@ namespace GB {
     using LongOD = OverflowDetector<long long>;
 
     void TestOverflow() {
-        EXPECT_TRUE(IntOD::IsUnaryMinusOverflow(INT_MIN));
-        EXPECT_TRUE(IntOD::IsAdditionOverflow(1, IntOD::GetMaxValue()));
-        EXPECT_TRUE(IntOD::IsSubtractionOverflow(-2, IntOD::GetMaxValue()));
-        EXPECT_TRUE(IntOD::IsMultiplicationOverflow(2, IntOD::GetMaxValue() / 2 + 1));
-        EXPECT_TRUE(IntOD::IsMultiplicationOverflow(2, (IntOD::GetMinValue() / 2 - 1)));
-        EXPECT_TRUE(IntOD::IsMultiplicationOverflow(-2, (IntOD::GetMinValue() / 2 - 1)));
+        EXPECT_TRUE(IntOD::DoesUnaryMinusOverflow(INT_MIN));
+        EXPECT_TRUE(IntOD::DoesAdditionOverflow(1, IntOD::GetMaxValue()));
+        EXPECT_TRUE(IntOD::DoesSubtractionOverflow(-2, IntOD::GetMaxValue()));
+        EXPECT_TRUE(IntOD::DoesMultiplicationOverflow(2, IntOD::GetMaxValue() / 2 + 1));
+        EXPECT_TRUE(IntOD::DoesMultiplicationOverflow(2, (IntOD::GetMinValue() / 2 - 1)));
+        EXPECT_TRUE(IntOD::DoesMultiplicationOverflow(-2, (IntOD::GetMinValue() / 2 - 1)));
 
-        EXPECT_FALSE(IntOD::IsUnaryMinusOverflow(INT_MAX));
-        EXPECT_FALSE(IntOD::IsAdditionOverflow(0, IntOD::GetMaxValue()));
-        EXPECT_FALSE(IntOD::IsSubtractionOverflow(-1, IntOD::GetMaxValue()));
-        EXPECT_FALSE(IntOD::IsMultiplicationOverflow(2, (IntOD::GetMaxValue() / 2)));
-        EXPECT_FALSE(IntOD::IsMultiplicationOverflow(2, (IntOD::GetMinValue() / 2)));
+        EXPECT_FALSE(IntOD::DoesUnaryMinusOverflow(INT_MAX));
+        EXPECT_FALSE(IntOD::DoesAdditionOverflow(0, IntOD::GetMaxValue()));
+        EXPECT_FALSE(IntOD::DoesSubtractionOverflow(-1, IntOD::GetMaxValue()));
+        EXPECT_FALSE(IntOD::DoesMultiplicationOverflow(2, (IntOD::GetMaxValue() / 2)));
+        EXPECT_FALSE(IntOD::DoesMultiplicationOverflow(2, (IntOD::GetMinValue() / 2)));
     }
 
     void TestRational() {
