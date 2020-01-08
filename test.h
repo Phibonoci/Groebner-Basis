@@ -2,6 +2,8 @@
 
 namespace GB {
 
+    void TestOverflow();
+
     void TestRational();
 
     void TestAll();

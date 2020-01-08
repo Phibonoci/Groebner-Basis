@@ -1,6 +1,7 @@
 #include <cassert>
 
 #include "rational.h"
+#include "overflow_detector.h"
 
 #define EXPECT_TRUE(expression) assert(!!(expression))
 
@@ -14,11 +15,38 @@
         } catch (...) { } \
     } while (false)
 
+#define EXPECT_NOT_THROW(expression) \
+    do { \
+        try { \
+            expression; \
+        } catch (...) { \
+            assert(false); \
+        } \
+    } while (false)
+
 #define EXPECT_EQUAL(lhs, rhs) assert((lhs) == (rhs))
 
 #define EXPECT_DIFFERENT(lhs, rhs) assert((lhs) != (rhs))
 
 namespace GB {
+
+    using IntOD = OverflowDetector<int>;
+    using LongOD = OverflowDetector<long long>;
+
+    void TestOverflow() {
+        EXPECT_TRUE(IntOD::DoesUnaryMinusOverflow(INT_MIN));
+        EXPECT_TRUE(IntOD::DoesAdditionOverflow(1, IntOD::GetMaxValue()));
+        EXPECT_TRUE(IntOD::DoesSubtractionOverflow(-2, IntOD::GetMaxValue()));
+        EXPECT_TRUE(IntOD::DoesMultiplicationOverflow(2, IntOD::GetMaxValue() / 2 + 1));
+        EXPECT_TRUE(IntOD::DoesMultiplicationOverflow(2, (IntOD::GetMinValue() / 2 - 1)));
+        EXPECT_TRUE(IntOD::DoesMultiplicationOverflow(-2, (IntOD::GetMinValue() / 2 - 1)));
+
+        EXPECT_FALSE(IntOD::DoesUnaryMinusOverflow(INT_MAX));
+        EXPECT_FALSE(IntOD::DoesAdditionOverflow(0, IntOD::GetMaxValue()));
+        EXPECT_FALSE(IntOD::DoesSubtractionOverflow(-1, IntOD::GetMaxValue()));
+        EXPECT_FALSE(IntOD::DoesMultiplicationOverflow(2, (IntOD::GetMaxValue() / 2)));
+        EXPECT_FALSE(IntOD::DoesMultiplicationOverflow(2, (IntOD::GetMinValue() / 2)));
+    }
 
     void TestRational() {
         EXPECT_THROW(Rational(0, 1).GetInverted());
@@ -55,6 +83,7 @@ namespace GB {
 
     void TestAll() {
         TestRational();
+        TestOverflow();
     }
 
 } // namespace GB
