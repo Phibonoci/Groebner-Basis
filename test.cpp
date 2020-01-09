@@ -2,6 +2,7 @@
 
 #include "rational.h"
 #include "overflow_detector.h"
+#include "monomial.h"
 
 #define EXPECT_TRUE(expression) assert(!!(expression))
 
@@ -64,6 +65,7 @@ namespace GB {
 
         EXPECT_EQUAL(-Rational(-1, 3), Rational(1, 3));
         EXPECT_EQUAL(Rational(-1, 2), Rational(1, -2));
+
         EXPECT_EQUAL(Rational(-1, -1), 1);
         EXPECT_EQUAL(+Rational(1, 3), Rational(1, 3));
 
@@ -81,9 +83,14 @@ namespace GB {
         EXPECT_FALSE(Rational(1) > Rational(1));
     }
 
+    void TestMonomial() {
+        Monomial m;
+    }
+
     void TestAll() {
         TestRational();
         TestOverflow();
+        TestMonomial();
     }
 
 } // namespace GB

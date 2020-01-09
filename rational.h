@@ -1,5 +1,7 @@
 #pragma once
 
+#include "overflow_detector.h"
+
 #include <cstdint>
 #include <type_traits>
 
@@ -10,7 +12,10 @@
 
 namespace GB {
 
-template<class IntegerType = int64_t, class = typename std::enable_if_t<std::is_integral_v<IntegerType>>>
+using DefaultIntegerType = int64_t;
+using DefaultOverflowDetectedType = OverflowDetector<int64_t>;
+
+template<class IntegerType = DefaultIntegerType, class = typename std::enable_if_t<std::is_integral_v<IntegerType>>>
 class Rational {
 // The following class invariants are used:
 // numerator is an integer,
@@ -18,6 +23,8 @@ class Rational {
 // numerator and denominator are co-prime.
 
 public:
+    using OverflowDetectedIntegerType = OverflowDetector<IntegerType>;
+
     Rational() : numerator_(0), denominator_(1) {
     }
 
@@ -25,7 +32,7 @@ public:
     }
 
     Rational(IntegerType numerator, IntegerType denominator) : numerator_(numerator), denominator_(denominator) {
-        if (denominator_ == 0) {
+        if (denominator_ == OverflowDetectedIntegerType(0)) {
             throw std::overflow_error("Divide by zero exception");
         }
         Reduce_();
@@ -41,7 +48,7 @@ public:
     }
 
     void Invert() {
-        if (numerator_ == 0) {
+        if (numerator_ == OverflowDetectedIntegerType(0)) {
             throw std::overflow_error("Divide by zero exception");
         }
         std::swap(numerator_, denominator_);
@@ -75,9 +82,9 @@ public:
     }
 
     Rational &operator+=(const Rational &other) {
-        assert(denominator_ != 0 && other.denominator_ != 0);
+        assert(denominator_ != OverflowDetectedIntegerType(0) && other.denominator_ != OverflowDetectedIntegerType(0));
 
-        int64_t denominators_lcm = std::lcm(denominator_, other.denominator_);
+        auto denominators_lcm = OverflowDetectedIntegerType::lcm(denominator_, other.denominator_);
         numerator_ *= denominators_lcm / denominator_;
         denominator_ = denominators_lcm;
         numerator_ += denominators_lcm / other.denominator_ * other.numerator_;
@@ -88,9 +95,9 @@ public:
     }
 
     Rational &operator-=(const Rational &other) {
-        assert(denominator_ != 0 && other.denominator_ != 0);
+        assert(denominator_ != OverflowDetectedIntegerType(0) && other.denominator_ != OverflowDetectedIntegerType(0));
 
-        int64_t denominators_lcm = std::lcm(denominator_, other.denominator_);
+        auto denominators_lcm = OverflowDetectedIntegerType::lcm(denominator_, other.denominator_);
         numerator_ *= denominators_lcm / denominator_;
         denominator_ = denominators_lcm;
         numerator_ -= denominators_lcm / other.denominator_ * other.numerator_;
@@ -167,7 +174,7 @@ public:
         lhs.CheckInvariants_();
         rhs.CheckInvariants_();
 
-        int64_t denominators_lcm = std::lcm(lhs.denominator_, rhs.denominator_);
+        auto denominators_lcm = OverflowDetectedIntegerType::lcm(lhs.denominator_, rhs.denominator_);
         return (lhs.numerator_ * (denominators_lcm / lhs.denominator_)) <
                (rhs.numerator_ * (denominators_lcm / rhs.denominator_));
     }
@@ -192,12 +199,12 @@ public:
 private:
     // This function keeps class invariants correct.
     void Reduce_() {
-        if (denominator_ < 0) {
+        if (denominator_ < OverflowDetectedIntegerType(0)) {
             denominator_ *= -1;
             numerator_ *= -1;
         }
 
-        IntegerType gcd = std::gcd(numerator_, denominator_);
+        auto gcd = OverflowDetectedIntegerType::gcd(numerator_, denominator_);
 
         numerator_ /= gcd;
         denominator_ /= gcd;
@@ -205,11 +212,11 @@ private:
 
     // This function checks class invariants.
     void CheckInvariants_() const {
-        assert(denominator_ > 0);
-        assert(std::gcd(numerator_, denominator_) == 1);
+        assert(denominator_ > OverflowDetectedIntegerType(0));
+        assert(OverflowDetectedIntegerType::gcd(numerator_, denominator_) == OverflowDetectedIntegerType(1));
     }
 
-    IntegerType numerator_, denominator_;
+    OverflowDetector<IntegerType> numerator_, denominator_;
 };
 
 } // namespace GB

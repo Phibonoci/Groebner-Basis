@@ -6,6 +6,8 @@ namespace GB {
 
     void TestRational();
 
+    void TestMonomial();
+
     void TestAll();
 
 } // namespace GB

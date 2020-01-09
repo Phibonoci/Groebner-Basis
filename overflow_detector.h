@@ -6,6 +6,8 @@
 #include <cmath>
 #include <limits>
 #include <stdexcept>
+#include <iostream>
+#include <numeric>
 
 namespace GB {
 
@@ -32,6 +34,14 @@ public:
         OverflowDetector result = *this;
 
         return result;
+    }
+
+    static OverflowDetector gcd(OverflowDetector lhs, OverflowDetector rhs) {
+        return std::gcd(lhs.value_, rhs.value_);
+    }
+
+    static OverflowDetector lcm(OverflowDetector lhs, OverflowDetector rhs) {
+        return lhs / gcd(lhs, rhs) * rhs;
     }
 
     static constexpr bool DoesUnaryMinusOverflow(IntegerType value) noexcept {
@@ -99,12 +109,18 @@ public:
         }
 
         if (offset > 0) {
-            if ((rhs == -1 && lhs == kMaxValue) || (rhs == kMaxValue && lhs == -1)) {
-                return true;
+            if (rhs == -1) {
+                return lhs == kMaxValue;
+            }
+            if (lhs == -1) {
+                return rhs == kMaxValue;
             }
         } else if (offset < 0) {
-            if ((rhs == -1 && lhs == kMinValue) || (rhs == kMinValue && lhs == -1)) {
-                return true;
+            if (rhs == -1) {
+                return lhs == kMinValue;
+            }
+            if (lhs == -1) {
+                return rhs == kMinValue;
             }
         }
 
