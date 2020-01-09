@@ -36,11 +36,11 @@ public:
         return result;
     }
 
-    static OverflowDetector gcd(OverflowDetector lhs, OverflowDetector rhs) {
+    static constexpr OverflowDetector gcd(OverflowDetector lhs, OverflowDetector rhs) noexcept {
         return std::gcd(lhs.value_, rhs.value_);
     }
 
-    static OverflowDetector lcm(OverflowDetector lhs, OverflowDetector rhs) {
+    static constexpr OverflowDetector lcm(OverflowDetector lhs, OverflowDetector rhs) noexcept {
         return lhs / gcd(lhs, rhs) * rhs;
     }
 
