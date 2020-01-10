@@ -117,6 +117,10 @@ public:
     }
 
     Rational &operator/=(const Rational &other) {
+        if (other.numerator_ == OverflowDetectedIntegerType(0)) {
+            throw std::overflow_error("Divide by zero exception");
+        }
+
         numerator_ *= other.denominator_;
         denominator_ *= other.numerator_;
 

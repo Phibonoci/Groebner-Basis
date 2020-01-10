@@ -15,6 +15,8 @@ template<class IntegerType = int64_t, class = typename std::enable_if_t<std::is_
 class OverflowDetector {
 public:
 
+    OverflowDetector() = default;
+
     OverflowDetector(IntegerType value) : value_(value) {
     }
 
@@ -223,6 +225,11 @@ public:
 
     friend bool operator>=(const OverflowDetector &lhs, const OverflowDetector &rhs) noexcept {
         return !(lhs < rhs);
+    }
+
+    friend std::ostream &operator<<(std::ostream &out, const OverflowDetector &other) {
+        std::cout << other.value_;
+        return out;
     }
 
 private:
