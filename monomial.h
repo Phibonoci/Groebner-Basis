@@ -129,9 +129,19 @@ public:
     }
 
     friend std::ostream &operator<<(std::ostream &out, const Monomial &other) {
-        bool multiplicationSignFlag = false;
+        bool multiplicationSignFlag = false, onlyCoefficient = (other.GetMaxVariableIndex() == 0);
 
-        std::cout << other.GetCoefficient() << "(";
+        if (onlyCoefficient || abs(other.GetCoefficient()) != 1) {
+            std::cout << other.GetCoefficient();
+        } else {
+            if (other.GetCoefficient() == -1) {
+                std::cout << '-';
+            }
+        }
+
+        if (!onlyCoefficient) {
+            std::cout << "(";
+        }
         for (size_t variableIndex = 0; variableIndex < other.GetMaxVariableIndex(); ++variableIndex) {
             if (DegreeType degree = other.GetDegree(variableIndex); degree != 0) {
                 if (multiplicationSignFlag) {
@@ -145,7 +155,10 @@ public:
                 multiplicationSignFlag = true;
             }
         }
-        std::cout << ")";
+        if (!onlyCoefficient) {
+            std::cout << ")";
+        }
+
         return out;
     }
 

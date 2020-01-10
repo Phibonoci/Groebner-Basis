@@ -196,7 +196,12 @@ public:
     }
 
     friend std::ostream &operator<<(std::ostream &out, const Rational &other) {
-        out << other.numerator_ << '/' << other.denominator_;
+        if (other.denominator_ == 1) {
+            out << other.numerator_;
+        } else {
+            out << other.numerator_ << '/' << other.denominator_;
+        }
+
         return out;
     }
 
@@ -222,5 +227,10 @@ private:
 
     OverflowDetector<IntegerType> numerator_, denominator_;
 };
+
+template <class T>
+Rational<T> abs(const Rational<T> &other) {
+    return other < 0 ? -other : other;
+}
 
 } // namespace GB
