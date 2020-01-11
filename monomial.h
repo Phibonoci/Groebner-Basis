@@ -178,4 +178,8 @@ private:
     FieldType coefficient_;
 };
 
+explicit Monomial() -> Monomial<>;
+explicit Monomial(int) -> Monomial<>;
+explicit Monomial(std::initializer_list<DefaultIntegerType>, int) -> Monomial<>;
+
 } // namespace GB
