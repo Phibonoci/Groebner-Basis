@@ -177,9 +177,9 @@ public:
         lhs.CheckInvariants_();
         rhs.CheckInvariants_();
 
-        auto denominators_lcm = OverflowDetectedIntegerType::lcm(lhs.denominator_, rhs.denominator_);
-        return (lhs.numerator_ * (denominators_lcm / lhs.denominator_)) <
-               (rhs.numerator_ * (denominators_lcm / rhs.denominator_));
+        auto denominators_gcd = OverflowDetectedIntegerType::gcd(lhs.denominator_, rhs.denominator_);
+        return (lhs.numerator_ * (rhs.denominator_ / denominators_gcd)) <
+               (rhs.numerator_ * (lhs.denominator_ / denominators_gcd));
     }
 
     friend bool operator>(const Rational &lhs, const Rational &rhs) {
