@@ -13,7 +13,6 @@
 namespace GB {
 
 using DefaultIntegerType = int64_t;
-using DefaultOverflowDetectedType = OverflowDetector<int64_t>;
 
 template<class IntegerType = DefaultIntegerType, class = typename std::enable_if_t<std::is_integral_v<IntegerType>>>
 class Rational {

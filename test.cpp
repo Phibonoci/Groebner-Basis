@@ -89,6 +89,8 @@ namespace GB {
 
         EXPECT_THROW(m1 / m2);
         EXPECT_THROW(m0 / Monomial(0));
+        EXPECT_THROW(m1 / Monomial({1, 2, 4}));
+        EXPECT_THROW(m1 - m2);
 
         EXPECT_NOT_THROW(m3 / m2);
         EXPECT_NOT_THROW(m0 / Monomial(3));
@@ -98,6 +100,7 @@ namespace GB {
         EXPECT_EQUAL(m1, m1 * m0);
         EXPECT_EQUAL(m1 * m3, Monomial({2, 4, 6, 4}, 4));
         EXPECT_EQUAL(m4 / m3, Monomial(-1));
+        EXPECT_EQUAL(m1 + m1, Monomial(2) * m1);
 
         EXPECT_DIFFERENT(m1, Monomial({1, 2, 2}));
         EXPECT_DIFFERENT(m1, m3 / Monomial({0, 0, 0, 4}, 3));
@@ -105,6 +108,8 @@ namespace GB {
 
         EXPECT_TRUE(m0.IsDivisibleBy(Monomial(1'000'000'000)));
         EXPECT_TRUE(Monomial<>::IsZero(Monomial(0)));
+        EXPECT_TRUE(Monomial<>::IsZero(m1 - m1));
+        EXPECT_TRUE(Monomial<>::IsZero(m3 * Monomial(0)));
 
         EXPECT_FALSE(m0.IsDivisibleBy(Monomial(0)));
         EXPECT_FALSE(Monomial<>::IsZero(Monomial(1)));
