@@ -78,7 +78,7 @@ public:
         return false;
     }
 
-    OverflowDetector &operator+=(const OverflowDetector& other) noexcept {
+    OverflowDetector &operator+=(const OverflowDetector &other) noexcept {
         assert(!DoesAdditionOverflow(value_, other.value_));
         value_ += other.value_;
 
@@ -96,7 +96,7 @@ public:
         return false;
     }
 
-    OverflowDetector &operator-=(const OverflowDetector& other) noexcept {
+    OverflowDetector &operator-=(const OverflowDetector &other) noexcept {
         assert(!DoesSubtractionOverflow(value_, other.value_));
         value_ -= other.value_;
 
@@ -141,7 +141,7 @@ public:
         }
     }
 
-    OverflowDetector &operator*=(const OverflowDetector& other) noexcept {
+    OverflowDetector &operator*=(const OverflowDetector &other) noexcept {
         assert(!DoesMultiplicationOverflow(value_, other.value_));
         value_ *= other.value_;
 
@@ -168,7 +168,7 @@ public:
         return false;
     }
 
-    OverflowDetector &operator/=(const OverflowDetector& other) noexcept {
+    OverflowDetector &operator/=(const OverflowDetector &other) noexcept {
         assert(!DoesDivisionOverflow(value_, other.value_));
         value_ /= other.value_;
 

@@ -24,10 +24,10 @@ class Rational {
 public:
     using OverflowDetectedIntegerType = OverflowDetector<IntegerType>;
 
-    Rational() : numerator_(0), denominator_(1) {
+    Rational() noexcept : numerator_(0), denominator_(1) {
     }
 
-    Rational(IntegerType numerator) : numerator_(numerator), denominator_(1) {
+    Rational(IntegerType numerator) noexcept : numerator_(numerator), denominator_(1) {
     }
 
     Rational(IntegerType numerator, IntegerType denominator) : numerator_(numerator), denominator_(denominator) {
@@ -38,11 +38,11 @@ public:
         CheckInvariants_();
     }
 
-    IntegerType GetNumerator() const {
+    [[nodiscard]] IntegerType GetNumerator() const noexcept {
         return numerator_;
     }
 
-    IntegerType GetDenominator() const {
+    [[nodiscard]] IntegerType GetDenominator() const noexcept {
         return denominator_;
     }
 
@@ -219,7 +219,7 @@ private:
     }
 
     // This function checks class invariants.
-    void CheckInvariants_() const {
+    void CheckInvariants_() const noexcept {
         assert(denominator_ > OverflowDetectedIntegerType(0));
         assert(OverflowDetectedIntegerType::gcd(numerator_, denominator_) == OverflowDetectedIntegerType(1));
     }

@@ -12,10 +12,11 @@ class Monomial {
 public:
     using DegreeType = OverflowDetector<uint64_t>;
     using DegreeVector = std::vector<DegreeType>;
+    using IndexType = size_t;
 
     Monomial() = default;
 
-    explicit Monomial(FieldType coefficient) : coefficient_(std::move(coefficient)) {
+    constexpr explicit Monomial(FieldType coefficient) : coefficient_(std::move(coefficient)) {
     }
 
     explicit Monomial(DegreeVector degrees, FieldType coefficient = 1)
@@ -23,19 +24,20 @@ public:
         Shrink_();
     }
 
-    Monomial(std::initializer_list<DegreeType> degrees, FieldType coefficient = 1)
+    constexpr Monomial(std::initializer_list<DegreeType> degrees, FieldType coefficient = 1)
         : degrees_(degrees), coefficient_(std::move(coefficient)) {
         Shrink_();
     }
 
-    [[nodiscard]] size_t GetMaxVariableIndex() const noexcept {
+    [[nodiscard]] IndexType GetAmountOfVariables() const noexcept {
         return degrees_.size();
     }
 
-    [[nodiscard]] DegreeType GetDegree(const size_t variableIndex) const noexcept {
+    [[nodiscard]] DegreeType GetDegree(const IndexType variableIndex) const noexcept {
         return variableIndex < degrees_.size() ? degrees_[variableIndex] : 0;
     }
 
+    // TODO: Delete later if unused
     [[nodiscard]] const DegreeVector &GetDegrees() const noexcept {
         return degrees_;
     }
@@ -57,6 +59,7 @@ public:
         return result;
     }
 
+    // TODO: Implement as polynomial private method
     Monomial &operator+=(const Monomial &other) {
         if (other.degrees_ != degrees_) {
             throw std::runtime_error("Monomials have to be the same for addition");
@@ -68,6 +71,7 @@ public:
         return *this;
     }
 
+    // TODO: Implement as polynomial private method
     Monomial &operator-=(const Monomial &other) {
         if (other.degrees_ != degrees_) {
             throw std::runtime_error("Monomials have to be the same for subtraction");
@@ -80,10 +84,10 @@ public:
     }
 
     Monomial &operator*=(const Monomial &other) {
-        degrees_.resize(std::max(GetMaxVariableIndex(), other.GetMaxVariableIndex()));
+        degrees_.resize(std::max(GetAmountOfVariables(), other.GetAmountOfVariables()));
 
         coefficient_ *= other.coefficient_;
-        for (size_t variableIndex = 0; variableIndex < other.GetMaxVariableIndex(); ++variableIndex) {
+        for (IndexType variableIndex = 0; variableIndex < other.GetAmountOfVariables(); ++variableIndex) {
             degrees_[variableIndex] += other.GetDegree(variableIndex);
         }
 
@@ -91,14 +95,12 @@ public:
         return *this;
     }
 
-    bool IsDivisibleBy(const Monomial& other) const {
-        if (other.coefficient_ == 0 || other.GetMaxVariableIndex() > GetMaxVariableIndex()) {
+    bool IsDivisibleBy(const Monomial &other) const {
+        if (other.coefficient_ == 0 || other.GetAmountOfVariables() > GetAmountOfVariables()) {
             return false;
         }
 
-        size_t maxCommonVariableIndex = std::min(GetMaxVariableIndex(), other.GetMaxVariableIndex());
-
-        for (size_t variableIndex = 0; variableIndex < maxCommonVariableIndex; ++variableIndex) {
+        for (IndexType variableIndex = 0; variableIndex < other.GetAmountOfVariables(); ++variableIndex) {
             if (other.GetDegree(variableIndex) > GetDegree(variableIndex)) {
                 return false;
             }
@@ -108,12 +110,12 @@ public:
     }
 
     Monomial &operator/=(const Monomial &other) {
-        if (other.GetMaxVariableIndex() > GetMaxVariableIndex()) {
+        if (other.GetAmountOfVariables() > GetAmountOfVariables()) {
             throw std::runtime_error("Monomial cannot be divided by another");
         }
 
         coefficient_ /= other.coefficient_;
-        for (size_t variableIndex = 0; variableIndex < other.GetMaxVariableIndex(); ++variableIndex) {
+        for (IndexType variableIndex = 0; variableIndex < other.GetAmountOfVariables(); ++variableIndex) {
             if (degrees_[variableIndex] < other.GetDegree(variableIndex)) {
                 throw std::runtime_error("Monomial cannot be divided by another");
             }
@@ -124,6 +126,7 @@ public:
         return *this;
     }
 
+    // TODO: Implement as polynomial private method
     friend Monomial operator+(const Monomial &lhs, const Monomial &rhs) {
         Monomial result = lhs;
         result += rhs;
@@ -131,6 +134,7 @@ public:
         return result;
     }
 
+    // TODO: Implement as polynomial private method
     friend Monomial operator-(const Monomial &lhs, const Monomial &rhs) {
         Monomial result = lhs;
         result -= rhs;
@@ -161,34 +165,29 @@ public:
     }
 
     friend std::ostream &operator<<(std::ostream &out, const Monomial &other) {
-        bool onlyCoefficient = (other.GetMaxVariableIndex() == 0);
-
-        if (onlyCoefficient || abs(other.GetCoefficient()) != 1) {
-            std::cout << other.GetCoefficient();
-        } else {
-            if (other.GetCoefficient() == -1) {
-                std::cout << '-';
-            }
+        if (bool onlyCoefficient = (other.GetAmountOfVariables() == 0); onlyCoefficient) {
+            out << other.GetCoefficient();
+            return out;
         }
 
-        if (!onlyCoefficient) {
-            std::cout << "(";
+        if (other.GetCoefficient() == -1) {
+            out << '-';
+        } else if (other.GetCoefficient() != 1) {
+            out << other.GetCoefficient();
         }
 
-        for (size_t variableIndex = 0; variableIndex < other.GetMaxVariableIndex(); ++variableIndex) {
+        out << "(";
+        for (IndexType variableIndex = 0; variableIndex < other.GetAmountOfVariables(); ++variableIndex) {
             if (DegreeType degree = other.GetDegree(variableIndex); degree != 0) {
                 if (degree != 1) {
-                    std::cout << "x_" << variableIndex << '^' << degree;
+                    out << "x_" << variableIndex << '^' << degree;
                 } else {
-                    std::cout << "x_" << variableIndex;
+                    out << "x_" << variableIndex;
                 }
-                std::cout << ((variableIndex == other.GetMaxVariableIndex() - 1) ? "" : " * ");
+                out << ((variableIndex == other.GetAmountOfVariables() - 1) ? "" : " * ");
             }
         }
-
-        if (!onlyCoefficient) {
-            std::cout << ")";
-        }
+        out << ")";
 
         return out;
     }
