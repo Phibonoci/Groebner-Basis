@@ -2,6 +2,7 @@
 
 #include "rational.h"
 #include "overflow_detector.h"
+#include "monomial.h"
 
 #define EXPECT_TRUE(expression) assert(!!(expression))
 
@@ -64,6 +65,7 @@ namespace GB {
 
         EXPECT_EQUAL(-Rational(-1, 3), Rational(1, 3));
         EXPECT_EQUAL(Rational(-1, 2), Rational(1, -2));
+
         EXPECT_EQUAL(Rational(-1, -1), 1);
         EXPECT_EQUAL(+Rational(1, 3), Rational(1, 3));
 
@@ -81,9 +83,42 @@ namespace GB {
         EXPECT_FALSE(Rational(1) > Rational(1));
     }
 
+    void TestMonomial() {
+        Monomial m0(1), m1({1, 2, 3}), m2({1, 0, 0, 1}), m3({{1, 2, 3, 4}, 4});
+        Monomial m4 = -m3;
+
+        EXPECT_THROW(m1 / m2);
+        EXPECT_THROW(m0 / Monomial(0));
+        EXPECT_THROW(m1 / Monomial({1, 2, 4}));
+        EXPECT_THROW(m1 - m2);
+
+        EXPECT_NOT_THROW(m3 / m2);
+        EXPECT_NOT_THROW(m0 / Monomial(3));
+
+        EXPECT_EQUAL(m1, Monomial({1, 2, 3, 0}));
+        EXPECT_EQUAL(m1, m3 / Monomial({0, 0, 0, 4}, 4));
+        EXPECT_EQUAL(m1, m1 * m0);
+        EXPECT_EQUAL(m1 * m3, Monomial({2, 4, 6, 4}, 4));
+        EXPECT_EQUAL(m4 / m3, Monomial(-1));
+        EXPECT_EQUAL(m1 + m1, Monomial(2) * m1);
+
+        EXPECT_DIFFERENT(m1, Monomial({1, 2, 2}));
+        EXPECT_DIFFERENT(m1, m3 / Monomial({0, 0, 0, 4}, 3));
+        EXPECT_DIFFERENT(m1, m3 / Monomial({0, 0, 0, 3}, 4));
+
+        EXPECT_TRUE(m0.IsDivisibleBy(Monomial(1'000'000'000)));
+        EXPECT_TRUE(Monomial<>::IsZero(Monomial(0)));
+        EXPECT_TRUE(Monomial<>::IsZero(m1 - m1));
+        EXPECT_TRUE(Monomial<>::IsZero(m3 * Monomial(0)));
+
+        EXPECT_FALSE(m0.IsDivisibleBy(Monomial(0)));
+        EXPECT_FALSE(Monomial<>::IsZero(Monomial(1)));
+    }
+
     void TestAll() {
         TestRational();
         TestOverflow();
+        TestMonomial();
     }
 
 } // namespace GB

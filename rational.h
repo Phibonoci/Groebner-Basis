@@ -1,5 +1,7 @@
 #pragma once
 
+#include "overflow_detector.h"
+
 #include <cstdint>
 #include <type_traits>
 
@@ -10,7 +12,9 @@
 
 namespace GB {
 
-template<class IntegerType = int64_t, class = typename std::enable_if_t<std::is_integral_v<IntegerType>>>
+using DefaultIntegerType = int64_t;
+
+template<class IntegerType = DefaultIntegerType, class = typename std::enable_if_t<std::is_integral_v<IntegerType>>>
 class Rational {
 // The following class invariants are used:
 // numerator is an integer,
@@ -18,30 +22,32 @@ class Rational {
 // numerator and denominator are co-prime.
 
 public:
-    Rational() : numerator_(0), denominator_(1) {
+    using OverflowDetectedIntegerType = OverflowDetector<IntegerType>;
+
+    Rational() noexcept : numerator_(0), denominator_(1) {
     }
 
-    Rational(IntegerType numerator) : numerator_(numerator), denominator_(1) {
+    Rational(IntegerType numerator) noexcept : numerator_(numerator), denominator_(1) {
     }
 
     Rational(IntegerType numerator, IntegerType denominator) : numerator_(numerator), denominator_(denominator) {
-        if (denominator_ == 0) {
+        if (denominator_ == OverflowDetectedIntegerType(0)) {
             throw std::overflow_error("Divide by zero exception");
         }
         Reduce_();
         CheckInvariants_();
     }
 
-    IntegerType GetNumerator() const {
+    [[nodiscard]] IntegerType GetNumerator() const noexcept {
         return numerator_;
     }
 
-    IntegerType GetDenominator() const {
+    [[nodiscard]] IntegerType GetDenominator() const noexcept {
         return denominator_;
     }
 
     void Invert() {
-        if (numerator_ == 0) {
+        if (numerator_ == OverflowDetectedIntegerType(0)) {
             throw std::overflow_error("Divide by zero exception");
         }
         std::swap(numerator_, denominator_);
@@ -75,9 +81,9 @@ public:
     }
 
     Rational &operator+=(const Rational &other) {
-        assert(denominator_ != 0 && other.denominator_ != 0);
+        assert(denominator_ != OverflowDetectedIntegerType(0) && other.denominator_ != OverflowDetectedIntegerType(0));
 
-        int64_t denominators_lcm = std::lcm(denominator_, other.denominator_);
+        auto denominators_lcm = OverflowDetectedIntegerType::lcm(denominator_, other.denominator_);
         numerator_ *= denominators_lcm / denominator_;
         denominator_ = denominators_lcm;
         numerator_ += denominators_lcm / other.denominator_ * other.numerator_;
@@ -88,9 +94,9 @@ public:
     }
 
     Rational &operator-=(const Rational &other) {
-        assert(denominator_ != 0 && other.denominator_ != 0);
+        assert(denominator_ != OverflowDetectedIntegerType(0) && other.denominator_ != OverflowDetectedIntegerType(0));
 
-        int64_t denominators_lcm = std::lcm(denominator_, other.denominator_);
+        auto denominators_lcm = OverflowDetectedIntegerType::lcm(denominator_, other.denominator_);
         numerator_ *= denominators_lcm / denominator_;
         denominator_ = denominators_lcm;
         numerator_ -= denominators_lcm / other.denominator_ * other.numerator_;
@@ -110,6 +116,10 @@ public:
     }
 
     Rational &operator/=(const Rational &other) {
+        if (other.numerator_ == OverflowDetectedIntegerType(0)) {
+            throw std::overflow_error("Divide by zero exception");
+        }
+
         numerator_ *= other.denominator_;
         denominator_ *= other.numerator_;
 
@@ -167,9 +177,9 @@ public:
         lhs.CheckInvariants_();
         rhs.CheckInvariants_();
 
-        int64_t denominators_lcm = std::lcm(lhs.denominator_, rhs.denominator_);
-        return (lhs.numerator_ * (denominators_lcm / lhs.denominator_)) <
-               (rhs.numerator_ * (denominators_lcm / rhs.denominator_));
+        auto denominators_gcd = OverflowDetectedIntegerType::gcd(lhs.denominator_, rhs.denominator_);
+        return (lhs.numerator_ * (rhs.denominator_ / denominators_gcd)) <
+               (rhs.numerator_ * (lhs.denominator_ / denominators_gcd));
     }
 
     friend bool operator>(const Rational &lhs, const Rational &rhs) {
@@ -185,31 +195,41 @@ public:
     }
 
     friend std::ostream &operator<<(std::ostream &out, const Rational &other) {
-        out << other.numerator_ << '/' << other.denominator_;
+        if (other.denominator_ == 1) {
+            out << other.numerator_;
+        } else {
+            out << other.numerator_ << '/' << other.denominator_;
+        }
+
         return out;
     }
 
 private:
     // This function keeps class invariants correct.
     void Reduce_() {
-        if (denominator_ < 0) {
+        if (denominator_ < OverflowDetectedIntegerType(0)) {
             denominator_ *= -1;
             numerator_ *= -1;
         }
 
-        IntegerType gcd = std::gcd(numerator_, denominator_);
+        auto gcd = OverflowDetectedIntegerType::gcd(numerator_, denominator_);
 
         numerator_ /= gcd;
         denominator_ /= gcd;
     }
 
     // This function checks class invariants.
-    void CheckInvariants_() const {
-        assert(denominator_ > 0);
-        assert(std::gcd(numerator_, denominator_) == 1);
+    void CheckInvariants_() const noexcept {
+        assert(denominator_ > OverflowDetectedIntegerType(0));
+        assert(OverflowDetectedIntegerType::gcd(numerator_, denominator_) == OverflowDetectedIntegerType(1));
     }
 
-    IntegerType numerator_, denominator_;
+    OverflowDetector<IntegerType> numerator_, denominator_;
 };
+
+template <class T>
+Rational<T> abs(const Rational<T> &other) {
+    return other < 0 ? -other : other;
+}
 
 } // namespace GB

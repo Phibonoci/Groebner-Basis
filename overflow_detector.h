@@ -6,12 +6,16 @@
 #include <cmath>
 #include <limits>
 #include <stdexcept>
+#include <iostream>
+#include <numeric>
 
 namespace GB {
 
 template<class IntegerType = int64_t, class = typename std::enable_if_t<std::is_integral_v<IntegerType>>>
 class OverflowDetector {
 public:
+
+    OverflowDetector() = default;
 
     OverflowDetector(IntegerType value) : value_(value) {
     }
@@ -32,6 +36,14 @@ public:
         OverflowDetector result = *this;
 
         return result;
+    }
+
+    static constexpr OverflowDetector gcd(OverflowDetector lhs, OverflowDetector rhs) noexcept {
+        return std::gcd(lhs.value_, rhs.value_);
+    }
+
+    static constexpr OverflowDetector lcm(OverflowDetector lhs, OverflowDetector rhs) noexcept {
+        return lhs / gcd(lhs, rhs) * rhs;
     }
 
     static constexpr bool DoesUnaryMinusOverflow(IntegerType value) noexcept {
@@ -66,7 +78,7 @@ public:
         return false;
     }
 
-    OverflowDetector &operator+=(const OverflowDetector& other) noexcept {
+    OverflowDetector &operator+=(const OverflowDetector &other) noexcept {
         assert(!DoesAdditionOverflow(value_, other.value_));
         value_ += other.value_;
 
@@ -84,7 +96,7 @@ public:
         return false;
     }
 
-    OverflowDetector &operator-=(const OverflowDetector& other) noexcept {
+    OverflowDetector &operator-=(const OverflowDetector &other) noexcept {
         assert(!DoesSubtractionOverflow(value_, other.value_));
         value_ -= other.value_;
 
@@ -99,12 +111,18 @@ public:
         }
 
         if (offset > 0) {
-            if ((rhs == -1 && lhs == kMaxValue) || (rhs == kMaxValue && lhs == -1)) {
-                return true;
+            if (rhs == -1) {
+                return lhs == kMaxValue;
+            }
+            if (lhs == -1) {
+                return rhs == kMaxValue;
             }
         } else if (offset < 0) {
-            if ((rhs == -1 && lhs == kMinValue) || (rhs == kMinValue && lhs == -1)) {
-                return true;
+            if (rhs == -1) {
+                return lhs == kMinValue;
+            }
+            if (lhs == -1) {
+                return rhs == kMinValue;
             }
         }
 
@@ -123,7 +141,7 @@ public:
         }
     }
 
-    OverflowDetector &operator*=(const OverflowDetector& other) noexcept {
+    OverflowDetector &operator*=(const OverflowDetector &other) noexcept {
         assert(!DoesMultiplicationOverflow(value_, other.value_));
         value_ *= other.value_;
 
@@ -150,7 +168,7 @@ public:
         return false;
     }
 
-    OverflowDetector &operator/=(const OverflowDetector& other) noexcept {
+    OverflowDetector &operator/=(const OverflowDetector &other) noexcept {
         assert(!DoesDivisionOverflow(value_, other.value_));
         value_ /= other.value_;
 
@@ -207,6 +225,11 @@ public:
 
     friend bool operator>=(const OverflowDetector &lhs, const OverflowDetector &rhs) noexcept {
         return !(lhs < rhs);
+    }
+
+    friend std::ostream &operator<<(std::ostream &out, const OverflowDetector &other) {
+        out << other.value_;
+        return out;
     }
 
 private:
