@@ -170,23 +170,10 @@ public:
             return out;
         }
 
-        if (other.GetCoefficient() == -1) {
-            out << '-';
-        } else if (other.GetCoefficient() != 1) {
-            out << other.GetCoefficient();
-        }
+        PrintCoefficient(out, other.GetCoefficient());
 
         out << "(";
-        for (IndexType variableIndex = 0; variableIndex < other.GetAmountOfVariables(); ++variableIndex) {
-            if (DegreeType degree = other.GetDegree(variableIndex); degree != 0) {
-                if (degree != 1) {
-                    out << "x_" << variableIndex << '^' << degree;
-                } else {
-                    out << "x_" << variableIndex;
-                }
-                out << ((variableIndex == other.GetAmountOfVariables() - 1) ? "" : " * ");
-            }
-        }
+        PrintVariables(out, other.degrees_);
         out << ")";
 
         return out;
@@ -197,6 +184,35 @@ public:
     }
 
 private:
+    static void PrintCoefficient(std::ostream &out, const FieldType &coefficient) {
+        if (coefficient == -1) {
+            out << '-';
+        } else if (coefficient != 1) {
+            out << coefficient;
+        }
+    }
+
+    static bool PrintVariable(std::ostream &out, IndexType index, DegreeType degree) {
+        if (degree == 0) {
+            return false;
+        }
+        if (degree != 1) {
+            out << "x_" << index << '^' << degree;
+        } else {
+            out << "x_" << index;
+        }
+        return true;
+    }
+
+    static void PrintVariables(std::ostream &out, const DegreeVector &degrees) {
+        IndexType variableIndex = 0;
+        for (; variableIndex + 1 < degrees.size(); ++variableIndex) {
+            if (bool variablePrinted = PrintVariable(out, variableIndex, degrees[variableIndex]); variablePrinted) {
+                out << " * ";
+            }
+        }
+        PrintVariable(out, variableIndex, degrees[variableIndex]);
+    }
 
     void Shrink_() {
         if (coefficient_ == FieldType(0)) {

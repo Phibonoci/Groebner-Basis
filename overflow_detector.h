@@ -228,7 +228,7 @@ public:
     }
 
     friend std::ostream &operator<<(std::ostream &out, const OverflowDetector &other) {
-        std::cout << other.value_;
+        out << other.value_;
         return out;
     }
 
