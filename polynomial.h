@@ -159,16 +159,9 @@ public:
             return out;
         }
 
-        for (auto iter = other.begin(); iter != other.end();) {
-            auto nextItem = std::next(iter);
-            if (nextItem == other.end()) {
-                break;
-            }
-
-            PrintTerm(out, *iter);
-            out << (nextItem->second < 0 ? " - " : " + ");
-
-            iter = nextItem;
+        for (auto iter = other.begin(); iter != std::prev(other.end());) {
+            PrintTerm(out, *iter++);
+            out << (iter->second < 0 ? " - " : " + ");
         }
 
         PrintTerm(out, *other.rbegin());
