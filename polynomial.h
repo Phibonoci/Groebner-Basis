@@ -106,36 +106,36 @@ public:
         return result;
     }
 
-    typename TermMap::iterator begin() noexcept {
-        return terms_.begin();
+    typename TermMap::reverse_iterator begin() noexcept {
+        return terms_.rbegin();
     }
 
-    typename TermMap::const_iterator begin() const noexcept {
-        return terms_.begin();
-    }
-
-    typename TermMap::reverse_iterator rbegin() noexcept {
-        return terms_.begin();
-    }
-
-    typename TermMap::reverse_iterator rbegin() const noexcept {
+    typename TermMap::const_reverse_iterator begin() const noexcept {
         return terms_.crbegin();
     }
 
-    typename TermMap::iterator end() noexcept {
-        return terms_.end();
+    typename TermMap::iterator rbegin() noexcept {
+        return terms_.begin();
     }
 
-    typename TermMap::const_iterator end() const noexcept {
-        return terms_.cend();
+    typename TermMap::const_iterator rbegin() const noexcept {
+        return terms_.cbegin();
     }
 
-    typename TermMap::reverse_iterator rend() noexcept {
+    typename TermMap::reverse_iterator end() noexcept {
         return terms_.rend();
     }
 
-    typename TermMap::reverse_iterator rend() const noexcept {
+    typename TermMap::const_reverse_iterator end() const noexcept {
         return terms_.crend();
+    }
+
+    typename TermMap::iterator rend() noexcept {
+        return terms_.end();
+    }
+
+    typename TermMap::const_iterator rend() const noexcept {
+        return terms_.cend();
     }
 
     friend bool operator==(const Polynomial &lhs, const Polynomial &rhs) {
@@ -153,7 +153,43 @@ public:
         return other.terms_.empty();
     }
 
+    friend std::ostream &operator<<(std::ostream &out, const Polynomial &other) {
+        if (IsEmpty(other)) {
+            out << "0";
+            return out;
+        }
+
+        for (auto iter = other.begin(); iter != other.end();) {
+            auto nextItem = std::next(iter);
+            if (nextItem == other.end()) {
+                break;
+            }
+
+            PrintTerm(out, *iter);
+            out << (nextItem->second < 0 ? " - " : " + ");
+
+            iter = nextItem;
+        }
+
+        PrintTerm(out, *other.rbegin());
+
+        return out;
+    }
+
 private:
+    static void PrintTerm(std::ostream &out, const Term &term) {
+        if (Monomial::HasNoVariables(term.first)) {
+            out << term.second;
+            return;
+        }
+
+        if (auto absCoefficient = abs(term.second); absCoefficient != 1) {
+            out << absCoefficient;
+        }
+
+        out << term.first;
+    }
+
     void AddTerm_(const Term &term) {
         if (auto foundTerm = terms_.lower_bound(term.first); foundTerm != terms_.end() && *foundTerm == term) {
             foundTerm->second += term.second;

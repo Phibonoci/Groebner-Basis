@@ -105,13 +105,8 @@ public:
     }
 
     friend std::ostream &operator<<(std::ostream &out, const Monomial &other) {
-        if (HasNoVariables(other)) {
-            out << "1";
-            return out;
-        }
-
         out << "(";
-        PrintVariables(out, other.degrees_);
+        PrintVariables_(out, other.degrees_);
         out << ")";
 
         return out;
@@ -122,7 +117,7 @@ public:
     }
 
 private:
-    static bool PrintVariable(std::ostream &out, IndexType index, DegreeType degree) {
+    static bool PrintVariable_(std::ostream &out, IndexType index, DegreeType degree) {
         if (degree == 0) {
             return false;
         }
@@ -134,14 +129,14 @@ private:
         return true;
     }
 
-    static void PrintVariables(std::ostream &out, const DegreeVector &degrees) {
+    static void PrintVariables_(std::ostream &out, const DegreeVector &degrees) {
         IndexType variableIndex = 0;
         for (; variableIndex + 1 < degrees.size(); ++variableIndex) {
-            if (bool isVariablePrinted = PrintVariable(out, variableIndex, degrees[variableIndex]); isVariablePrinted) {
+            if (bool isVariablePrinted = PrintVariable_(out, variableIndex, degrees[variableIndex]); isVariablePrinted) {
                 out << " * ";
             }
         }
-        PrintVariable(out, variableIndex, degrees[variableIndex]);
+        PrintVariable_(out, variableIndex, degrees[variableIndex]);
     }
 
     void Shrink_() {

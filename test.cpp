@@ -125,7 +125,7 @@ namespace GB {
         EXPECT_EQUAL(p1 + p2, Polynomial({{{1, 2, 3}, 2}, {{0, 1}, 8}}));
         EXPECT_EQUAL(p1 - p2, Polynomial({{{0, 1}, 8}}));
         EXPECT_EQUAL(p1.GetAmountOfTerms(), 2ull);
-        EXPECT_EQUAL(p1.GetNthTerm(1), Term({1, 2, 3}, 1));
+        EXPECT_EQUAL(p1.GetNthTerm(0), Term({1, 2, 3}, 1));
 
         EXPECT_DIFFERENT(p1, -p1);
 
