@@ -8,6 +8,8 @@ namespace GB {
 
     void TestMonomial();
 
+    void TestPolynomial();
+
     void TestAll();
 
 } // namespace GB
