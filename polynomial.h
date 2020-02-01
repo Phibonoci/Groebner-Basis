@@ -23,10 +23,8 @@ public:
     explicit Polynomial(Monomial monomial) : terms_{{std::move(monomial), 1}} {
     }
 
-    explicit constexpr Polynomial(Term term) {
-        if (term.second != 0) {
-            terms_.insert(std::move(term));
-        }
+    explicit constexpr Polynomial(Term term) : terms_{term} {
+        Shrink_();
     }
 
     explicit Polynomial(FieldType coefficient) : terms_{{{}, std::move(coefficient)}} {
@@ -50,9 +48,7 @@ public:
 
     Polynomial operator-() const {
         Polynomial result = *this;
-        for (auto &term : result) {
-            term.second *= -1;
-        }
+        result *= Polynomial(-1);
 
         return result;
     }
@@ -212,11 +208,11 @@ private:
     }
 
     void Shrink_() {
-        for (auto constIter = terms_.begin(); constIter != terms_.end();) {
-            if (constIter->second == 0) {
-                constIter = terms_.erase(constIter);
+        for (auto iter = terms_.begin(); iter != terms_.end();) {
+            if (iter->second == 0) {
+                iter = terms_.erase(iter);
             } else {
-                ++constIter;
+                ++iter;
             }
         }
     }
