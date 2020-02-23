@@ -4,6 +4,7 @@
 #include "rational.h"
 #include "monomial.h"
 
+#include <set>
 #include <map>
 
 namespace GB {
@@ -219,11 +220,25 @@ private:
     }
 
     TermMap terms_;
+
+    template<SuitableFieldType>
+    friend struct Less;
 };
 
 explicit Polynomial() -> Polynomial<>;
 explicit Polynomial(int) -> Polynomial<>;
 explicit Polynomial(std::pair<Monomial, int>) -> Polynomial<>;
 explicit Polynomial(std::initializer_list<std::pair<Monomial, int>>) -> Polynomial<>;
+
+// TODO: Rewrite using custom hash function with efficient changes. Therefore change set to unordered_set.
+template<SuitableFieldType FieldType = Rational<>>
+struct Less {
+    bool operator()(const Polynomial<FieldType> &lhs, const Polynomial<FieldType> &rhs) const noexcept {
+        return lhs.terms_ < rhs.terms_;
+    }
+};
+
+template<SuitableFieldType FieldType = Rational<>>
+using PolynomialSet = std::set<Polynomial<FieldType>, Less<FieldType>>;
 
 }
