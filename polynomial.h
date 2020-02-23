@@ -1,5 +1,6 @@
 #pragma once
 
+#include "concepts.h"
 #include "rational.h"
 #include "monomial.h"
 
@@ -7,7 +8,7 @@
 
 namespace GB {
 
-template<class FieldType = Rational<>>
+template<SuitableFieldType FieldType = Rational<>>
 class Polynomial {
 public:
     using TermMap = std::map<Monomial, FieldType>;
