@@ -1,5 +1,6 @@
 #pragma once
 
+#include "concepts.h"
 #include "overflow_detector.h"
 
 #include <cstdint>
@@ -14,7 +15,7 @@ namespace GB {
 
 using DefaultIntegerType = int64_t;
 
-template<class IntegerType = DefaultIntegerType, class = typename std::enable_if_t<std::is_integral_v<IntegerType>>>
+template<Integral IntegerType = DefaultIntegerType>
 class Rational {
 // The following class invariants are used:
 // numerator is an integer,
@@ -227,7 +228,7 @@ private:
     OverflowDetector<IntegerType> numerator_, denominator_;
 };
 
-template <class T>
+template <Integral T>
 Rational<T> abs(const Rational<T> &other) {
     return other < 0 ? -other : other;
 }

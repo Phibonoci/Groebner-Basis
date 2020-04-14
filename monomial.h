@@ -7,7 +7,6 @@
 
 namespace GB {
 
-template<class FieldType = Rational<>>
 class Monomial {
 public:
     using DegreeType = OverflowDetector<uint64_t>;
@@ -16,16 +15,11 @@ public:
 
     Monomial() = default;
 
-    constexpr explicit Monomial(FieldType coefficient) : coefficient_(std::move(coefficient)) {
-    }
-
-    explicit Monomial(DegreeVector degrees, FieldType coefficient = 1)
-        : degrees_(std::move(degrees)), coefficient_(std::move(coefficient)) {
+    Monomial(std::initializer_list<DegreeType> degrees) : degrees_(degrees) {
         Shrink_();
     }
 
-    constexpr Monomial(std::initializer_list<DegreeType> degrees, FieldType coefficient = 1)
-        : degrees_(degrees), coefficient_(std::move(coefficient)) {
+    explicit Monomial(DegreeVector degrees) : degrees_(std::move(degrees)) {
         Shrink_();
     }
 
@@ -42,51 +36,9 @@ public:
         return degrees_;
     }
 
-    const FieldType &GetCoefficient() const noexcept {
-        return coefficient_;
-    }
-
-    Monomial operator+() const {
-        Monomial result = *this;
-
-        return result;
-    }
-
-    Monomial operator-() const {
-        Monomial result = *this;
-        result.coefficient_ *= -1;
-
-        return result;
-    }
-
-    // TODO: Implement as polynomial private method
-    Monomial &operator+=(const Monomial &other) {
-        if (other.degrees_ != degrees_) {
-            throw std::runtime_error("Monomials have to be the same for addition");
-        }
-
-        coefficient_ += other.coefficient_;
-
-        Shrink_();
-        return *this;
-    }
-
-    // TODO: Implement as polynomial private method
-    Monomial &operator-=(const Monomial &other) {
-        if (other.degrees_ != degrees_) {
-            throw std::runtime_error("Monomials have to be the same for subtraction");
-        }
-
-        coefficient_ -= other.coefficient_;
-
-        Shrink_();
-        return *this;
-    }
-
     Monomial &operator*=(const Monomial &other) {
         degrees_.resize(std::max(GetAmountOfVariables(), other.GetAmountOfVariables()));
 
-        coefficient_ *= other.coefficient_;
         for (IndexType variableIndex = 0; variableIndex < other.GetAmountOfVariables(); ++variableIndex) {
             degrees_[variableIndex] += other.GetDegree(variableIndex);
         }
@@ -96,7 +48,7 @@ public:
     }
 
     bool IsDivisibleBy(const Monomial &other) const {
-        if (other.coefficient_ == 0 || other.GetAmountOfVariables() > GetAmountOfVariables()) {
+        if (other.GetAmountOfVariables() > GetAmountOfVariables()) {
             return false;
         }
 
@@ -114,7 +66,6 @@ public:
             throw std::runtime_error("Monomial cannot be divided by another");
         }
 
-        coefficient_ /= other.coefficient_;
         for (IndexType variableIndex = 0; variableIndex < other.GetAmountOfVariables(); ++variableIndex) {
             if (degrees_[variableIndex] < other.GetDegree(variableIndex)) {
                 throw std::runtime_error("Monomial cannot be divided by another");
@@ -124,22 +75,6 @@ public:
 
         Shrink_();
         return *this;
-    }
-
-    // TODO: Implement as polynomial private method
-    friend Monomial operator+(const Monomial &lhs, const Monomial &rhs) {
-        Monomial result = lhs;
-        result += rhs;
-
-        return result;
-    }
-
-    // TODO: Implement as polynomial private method
-    friend Monomial operator-(const Monomial &lhs, const Monomial &rhs) {
-        Monomial result = lhs;
-        result -= rhs;
-
-        return result;
     }
 
     friend Monomial operator*(const Monomial &lhs, const Monomial &rhs) {
@@ -156,8 +91,13 @@ public:
         return result;
     }
 
+    // TODO: Add monomial order class.
+    friend bool operator<(const Monomial &lhs, const Monomial &rhs) {
+        return lhs.degrees_ < rhs.degrees_;
+    }
+
     friend bool operator==(const Monomial &lhs, const Monomial &rhs) {
-        return lhs.coefficient_ == rhs.coefficient_ && lhs.degrees_ == rhs.degrees_;
+        return lhs.degrees_ == rhs.degrees_;
     }
 
     friend bool operator!=(const Monomial &lhs, const Monomial &rhs) {
@@ -165,34 +105,19 @@ public:
     }
 
     friend std::ostream &operator<<(std::ostream &out, const Monomial &other) {
-        if (bool onlyCoefficient = (other.GetAmountOfVariables() == 0); onlyCoefficient) {
-            out << other.GetCoefficient();
-            return out;
-        }
-
-        PrintCoefficient(out, other.GetCoefficient());
-
         out << "(";
-        PrintVariables(out, other.degrees_);
+        PrintVariables_(out, other.degrees_);
         out << ")";
 
         return out;
     }
 
-    static bool IsZero(const Monomial &other) noexcept {
-        return other.coefficient_ == 0;
+    static bool HasNoVariables(const Monomial &other) noexcept {
+        return other.degrees_.empty();
     }
 
 private:
-    static void PrintCoefficient(std::ostream &out, const FieldType &coefficient) {
-        if (coefficient == -1) {
-            out << '-';
-        } else if (coefficient != 1) {
-            out << coefficient;
-        }
-    }
-
-    static bool PrintVariable(std::ostream &out, IndexType index, DegreeType degree) {
+    static bool PrintVariable_(std::ostream &out, IndexType index, DegreeType degree) {
         if (degree == 0) {
             return false;
         }
@@ -204,32 +129,24 @@ private:
         return true;
     }
 
-    static void PrintVariables(std::ostream &out, const DegreeVector &degrees) {
+    static void PrintVariables_(std::ostream &out, const DegreeVector &degrees) {
         IndexType variableIndex = 0;
         for (; variableIndex + 1 < degrees.size(); ++variableIndex) {
-            if (bool variablePrinted = PrintVariable(out, variableIndex, degrees[variableIndex]); variablePrinted) {
+            if (bool isVariablePrinted = PrintVariable_(out, variableIndex, degrees[variableIndex]); isVariablePrinted) {
                 out << " * ";
             }
         }
-        PrintVariable(out, variableIndex, degrees[variableIndex]);
+        PrintVariable_(out, variableIndex, degrees[variableIndex]);
     }
 
     void Shrink_() {
-        if (coefficient_ == FieldType(0)) {
-            degrees_.resize(0);
-        }
-
-        while (degrees_.size() && degrees_.back() == 0) {
+        while (!degrees_.empty() && degrees_.back() == 0) {
             degrees_.pop_back();
         }
     }
 
     DegreeVector degrees_;
-    FieldType coefficient_ = FieldType(0);
 };
 
-explicit Monomial() -> Monomial<>;
-explicit Monomial(int) -> Monomial<>;
-explicit Monomial(std::initializer_list<DefaultIntegerType>, int) -> Monomial<>;
 
 } // namespace GB
