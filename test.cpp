@@ -34,8 +34,8 @@ namespace GB {
 
     using IntOD = OverflowDetector<int>;
     using LongOD = OverflowDetector<long long>;
-    using Term = std::pair<const Monomial, Rational<>>;
-    using IndexType = size_t;
+    using Term = Polynomial<>::Term;
+    using IndexType = Monomial::IndexType;
     using DegreeType = OverflowDetector<uint64_t>;
 
     void TestOverflow() {
@@ -129,7 +129,7 @@ namespace GB {
 
         EXPECT_DIFFERENT(p1, -p1);
 
-        EXPECT_TRUE(Polynomial<>::IsEmpty(Polynomial{}));
+        EXPECT_TRUE(Polynomial<>::IsZero(Polynomial {}));
     }
 
     void TestAll() {

@@ -14,18 +14,18 @@ class Polynomial {
 public:
     using TermMap = std::map<Monomial, FieldType>;
     using Term = typename TermMap::value_type;
-    using IndexType = size_t;
+    using IndexType = Monomial::IndexType;
 
     Polynomial() = default;
 
-    Polynomial(std::initializer_list<Term> terms) : terms_(std::move(terms)) {
+    Polynomial(std::initializer_list<Term> terms) : terms_(terms) {
         Shrink_();
     }
 
     explicit Polynomial(Monomial monomial) : terms_{{std::move(monomial), 1}} {
     }
 
-    explicit constexpr Polynomial(Term term) : terms_{term} {
+    explicit constexpr Polynomial(Term term) : terms_{std::move(term)} {
         Shrink_();
     }
 
@@ -112,11 +112,19 @@ public:
         return terms_.crbegin();
     }
 
+    typename TermMap::const_reverse_iterator cbegin() const noexcept {
+        return terms_.crbegin();
+    }
+
     typename TermMap::iterator rbegin() noexcept {
         return terms_.begin();
     }
 
     typename TermMap::const_iterator rbegin() const noexcept {
+        return terms_.cbegin();
+    }
+
+    typename TermMap::const_iterator crbegin() const noexcept {
         return terms_.cbegin();
     }
 
@@ -128,11 +136,19 @@ public:
         return terms_.crend();
     }
 
+    typename TermMap::const_reverse_iterator cend() const noexcept {
+        return terms_.crend();
+    }
+
     typename TermMap::iterator rend() noexcept {
         return terms_.end();
     }
 
     typename TermMap::const_iterator rend() const noexcept {
+        return terms_.cend();
+    }
+
+    typename TermMap::const_iterator crend() const noexcept {
         return terms_.cend();
     }
 
@@ -147,12 +163,12 @@ public:
         return !(lhs == rhs);
     }
 
-    static bool IsEmpty(const Polynomial &other) {
+    static bool IsZero(const Polynomial &other) {
         return other.terms_.empty();
     }
 
     friend std::ostream &operator<<(std::ostream &out, const Polynomial &other) {
-        if (IsEmpty(other)) {
+        if (IsZero(other)) {
             out << "0";
             return out;
         }
@@ -174,7 +190,8 @@ private:
             return;
         }
 
-        if (auto absCoefficient = abs(term.second); absCoefficient != 1) {
+        auto absCoefficient = abs(term.second);
+        if (absCoefficient != 1) {
             out << absCoefficient;
         }
 
@@ -182,7 +199,9 @@ private:
     }
 
     void AddTerm_(const Term &term) {
-        if (auto foundTerm = terms_.lower_bound(term.first); foundTerm != terms_.end() && *foundTerm == term) {
+        auto foundTerm = terms_.lower_bound(term.first);
+
+        if (foundTerm != terms_.end() && *foundTerm == term) {
             foundTerm->second += term.second;
             if (foundTerm->second == 0) {
                 terms_.erase(foundTerm);
@@ -193,13 +212,15 @@ private:
     }
 
     void SubtractTerm_(const Term &term) {
-        if (auto foundTerm = terms_.lower_bound(term.first); foundTerm != terms_.end() && *foundTerm == term) {
+        auto foundTerm = terms_.lower_bound(term.first);
+
+        if (foundTerm != terms_.end() && *foundTerm == term) {
             foundTerm->second -= term.second;
             if (foundTerm->second == 0) {
                 terms_.erase(foundTerm);
             }
         } else {
-            terms_.insert(foundTerm, {term.first, term.second});
+            terms_.insert(foundTerm, {term.first, -term.second});
         }
     }
 

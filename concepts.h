@@ -16,5 +16,6 @@ concept Arithmetic = requires (T lhs, T rhs) {
 
 template <typename T>
 concept SuitableFieldType = Arithmetic<T> && requires (T value) {
-    value == T();
+    { T() } -> T;
+    {value == value} -> bool;
 };
