@@ -4,19 +4,19 @@
 
 namespace GB {
     struct LexicographicalOrder {
-        bool operator()(const Monomial& lhs, const Monomial& rhs) const {
+        bool operator()(const Monomial &lhs, const Monomial &rhs) const {
             return lhs < rhs;
         }
     };
 
     struct ReverseLexicographicalOrder {
-        bool operator()(const Monomial& lhs, const Monomial& rhs) const {
+        bool operator()(const Monomial &lhs, const Monomial &rhs) const {
             return rhs < lhs;
         }
     };
 
-    struct GradedLexicographicOrder {
-        bool operator()(const Monomial& lhs, const Monomial& rhs) const {
+    struct GradedLexicographicalOrder {
+        bool operator()(const Monomial &lhs, const Monomial &rhs) const {
             auto lTotalDegree = lhs.TotalDegree();
             auto rTotalDegree = rhs.TotalDegree();
 
@@ -28,8 +28,8 @@ namespace GB {
         }
     };
 
-    struct GradedReverseLexicographicOrder {
-        bool operator()(const Monomial& lhs, const Monomial& rhs) const {
+    struct GradedReverseLexicographicalOrder {
+        bool operator()(const Monomial &lhs, const Monomial &rhs) const {
             auto lTotalDegree = lhs.TotalDegree();
             auto rTotalDegree = rhs.TotalDegree();
 

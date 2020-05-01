@@ -139,8 +139,8 @@ namespace GB {
             {{6, 0, 0}, 1}
         });
         Polynomial<Rational<>, ReverseLexicographicalOrder> revLexOrder = lexOrder;
-        Polynomial<Rational<>, GradedLexicographicOrder> gradedLexOrder = lexOrder;
-        Polynomial<Rational<>, GradedReverseLexicographicOrder> gradedRevLexOrder = lexOrder;
+        Polynomial<Rational<>, GradedLexicographicalOrder> gradedLexOrder = lexOrder;
+        Polynomial<Rational<>, GradedReverseLexicographicalOrder> gradedRevLexOrder = lexOrder;
 
         EXPECT_EQUAL(lexOrder.GetNthTerm(0), Term({6, 0, 0}, 1));
         EXPECT_EQUAL(lexOrder.GetNthTerm(1), Term({2, 2, 2}, 1));
