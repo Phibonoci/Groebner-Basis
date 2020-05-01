@@ -9,9 +9,11 @@
 #include <iostream>
 #include <numeric>
 
+#include "concepts.h"
+
 namespace GB {
 
-template<class IntegerType = int64_t, class = typename std::enable_if_t<std::is_integral_v<IntegerType>>>
+template<Integral IntegerType = int64_t>
 class OverflowDetector {
 public:
 

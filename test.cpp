@@ -4,6 +4,7 @@
 #include "overflow_detector.h"
 #include "monomial.h"
 #include "polynomial.h"
+#include "order.h"
 
 #define EXPECT_TRUE(expression) assert(!!(expression))
 
@@ -125,11 +126,41 @@ namespace GB {
         EXPECT_EQUAL(p1 + p2, Polynomial({{{1, 2, 3}, 2}, {{0, 1}, 8}}));
         EXPECT_EQUAL(p1 - p2, Polynomial({{{0, 1}, 8}}));
         EXPECT_EQUAL(p1.GetAmountOfTerms(), 2ull);
-        EXPECT_EQUAL(p1.GetNthTerm(0), Term({1, 2, 3}, 1));
-
         EXPECT_DIFFERENT(p1, -p1);
 
         EXPECT_TRUE(Polynomial<>::IsZero(Polynomial {}));
+    }
+
+    void TestOrder() {
+        Polynomial<Rational<>, LexicographicalOrder> lexOrder({
+            {{1, 2, 3}, 1},
+            {{1, 2, 4}, 1},
+            {{2, 2, 2}, 1},
+            {{6, 0, 0}, 1}
+        });
+        Polynomial<Rational<>, ReverseLexicographicalOrder> revLexOrder = lexOrder;
+        Polynomial<Rational<>, GradedLexicographicOrder> gradedLexOrder = lexOrder;
+        Polynomial<Rational<>, GradedReverseLexicographicOrder> gradedRevLexOrder = lexOrder;
+
+        EXPECT_EQUAL(lexOrder.GetNthTerm(0), Term({6, 0, 0}, 1));
+        EXPECT_EQUAL(lexOrder.GetNthTerm(1), Term({2, 2, 2}, 1));
+        EXPECT_EQUAL(lexOrder.GetNthTerm(2), Term({1, 2, 4}, 1));
+        EXPECT_EQUAL(lexOrder.GetNthTerm(3), Term({1, 2, 3}, 1));
+
+        EXPECT_EQUAL(revLexOrder.GetNthTerm(0), Term({1, 2, 3}, 1));
+        EXPECT_EQUAL(revLexOrder.GetNthTerm(1), Term({1, 2, 4}, 1));
+        EXPECT_EQUAL(revLexOrder.GetNthTerm(2), Term({2, 2, 2}, 1));
+        EXPECT_EQUAL(revLexOrder.GetNthTerm(3), Term({6, 0, 0}, 1));
+
+        EXPECT_EQUAL(gradedLexOrder.GetNthTerm(0), Term({1, 2, 4}, 1));
+        EXPECT_EQUAL(gradedLexOrder.GetNthTerm(1), Term({6, 0, 0}, 1));
+        EXPECT_EQUAL(gradedLexOrder.GetNthTerm(2), Term({2, 2, 2}, 1));
+        EXPECT_EQUAL(gradedLexOrder.GetNthTerm(3), Term({1, 2, 3}, 1));
+
+        EXPECT_EQUAL(gradedRevLexOrder.GetNthTerm(0), Term({1, 2, 4}, 1));
+        EXPECT_EQUAL(gradedRevLexOrder.GetNthTerm(1), Term({1, 2, 3}, 1));
+        EXPECT_EQUAL(gradedRevLexOrder.GetNthTerm(2), Term({2, 2, 2}, 1));
+        EXPECT_EQUAL(gradedRevLexOrder.GetNthTerm(3), Term({6, 0, 0}, 1));
     }
 
     void TestAll() {
@@ -137,6 +168,7 @@ namespace GB {
         TestOverflow();
         TestMonomial();
         TestPolynomial();
+        TestOrder();
     }
 
 } // namespace GB

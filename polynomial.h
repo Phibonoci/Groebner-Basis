@@ -3,16 +3,17 @@
 #include "concepts.h"
 #include "rational.h"
 #include "monomial.h"
+#include "order.h"
 
 #include <set>
 #include <map>
 
 namespace GB {
 
-template<SuitableFieldType FieldType = Rational<>>
+template<SuitableFieldType FieldType = Rational<>, Order<Monomial> MonomialOrder = LexicographicalOrder>
 class Polynomial {
 public:
-    using TermMap = std::map<Monomial, FieldType>;
+    using TermMap = std::map<Monomial, FieldType, MonomialOrder>;
     using Term = typename TermMap::value_type;
     using IndexType = Monomial::IndexType;
 
@@ -31,6 +32,13 @@ public:
 
     explicit Polynomial(FieldType coefficient) : terms_{{{}, std::move(coefficient)}} {
         Shrink_();
+    }
+
+    template<Order<Monomial> OtherMonomialOrder>
+    Polynomial(const Polynomial<FieldType, OtherMonomialOrder> &other) {
+        for (const auto &term : other) {
+            terms_.insert(term);
+        }
     }
 
     [[nodiscard]] IndexType GetAmountOfTerms() const noexcept {
@@ -259,7 +267,7 @@ struct Less {
     }
 };
 
-template<SuitableFieldType FieldType = Rational<>>
-using PolynomialSet = std::set<Polynomial<FieldType>, Less<FieldType>>;
+template<SuitableFieldType FieldType = Rational<>, Order<Monomial> MonomialOrder = LexicographicalOrder>
+using PolynomialSet = std::set<Polynomial<FieldType, MonomialOrder>, Less<FieldType>>;
 
 }
