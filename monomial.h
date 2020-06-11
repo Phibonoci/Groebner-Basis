@@ -96,7 +96,6 @@ public:
         return result;
     }
 
-    // TODO: Add monomial order class.
     friend bool operator<(const Monomial &lhs, const Monomial &rhs) {
         return lhs.degrees_ < rhs.degrees_;
     }
@@ -110,6 +109,12 @@ public:
     }
 
     friend std::ostream &operator<<(std::ostream &out, const Monomial &other) {
+
+        if (HasNoVariables(other)) {
+            out << "0";
+            return out;
+        }
+
         out << "(";
         PrintVariables_(out, other.degrees_);
         out << ")";
@@ -152,6 +157,5 @@ private:
 
     DegreeVector degrees_;
 };
-
 
 } // namespace GB
