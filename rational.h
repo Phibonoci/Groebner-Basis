@@ -228,7 +228,7 @@ private:
     OverflowDetector<IntegerType> numerator_, denominator_;
 };
 
-template <Integral T>
+template<Integral T>
 Rational<T> abs(const Rational<T> &other) {
     return other < 0 ? -other : other;
 }
