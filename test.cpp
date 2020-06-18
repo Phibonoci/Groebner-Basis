@@ -213,20 +213,22 @@ namespace GB {
 
             BuhbergerAlgorithm(set);
 
-            for (const auto &i : set) {
+            for (const auto& i : set) {
                 std::cout << i << '\n';
             }
+
+            std::cout << '\n';
         }
 
         {
-            Polynomial f1 = Polynomial(Term{{2}, -5}) - Polynomial(Term{{1, 1}, 4}) - Polynomial(Term{{1}, 2}) + Polynomial(Term{{0, 2}, 2});
-            Polynomial f2 = -Polynomial(Term{{1, 1}, 4}) - Polynomial(Term{{1}, 2}) + Polynomial(Term{{0, 2}, 2}) + Polynomial(5);
+            Polynomial f1 = Polynomial(Term{{2}, 1}) + Polynomial(Term{{1}, 2}) - Polynomial(Term{{0, 1}, 4});
+            Polynomial f2 = Polynomial(Term{{0, 2}, 1}) + Polynomial(Term{{1, 1}, 1}) - Polynomial(Term{{1}, 1});
 
             PolynomialSet<> set = {f1, f2};
 
             BuhbergerAlgorithm(set);
 
-            for (const auto &i : set) {
+            for (const auto& i : set) {
                 std::cout << i << '\n';
             }
         }
