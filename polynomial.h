@@ -3,16 +3,17 @@
 #include "concepts.h"
 #include "rational.h"
 #include "monomial.h"
+#include "order.h"
 
 #include <set>
 #include <map>
 
 namespace GB {
 
-template<SuitableFieldType FieldType = Rational<>>
+template<SuitableFieldType FieldType = Rational<>, SuitableOrder<Monomial> MonomialOrder = LexicographicalOrder>
 class Polynomial {
 public:
-    using TermMap = std::map<Monomial, FieldType>;
+    using TermMap = std::map<Monomial, FieldType, MonomialOrder>;
     using Term = typename TermMap::value_type;
     using IndexType = Monomial::IndexType;
 
@@ -22,15 +23,22 @@ public:
         Shrink_();
     }
 
-    explicit Polynomial(Monomial monomial) : terms_{{std::move(monomial), 1}} {
+    Polynomial(Monomial monomial) : terms_{{std::move(monomial), 1}} {
     }
 
     explicit constexpr Polynomial(Term term) : terms_{std::move(term)} {
         Shrink_();
     }
 
-    explicit Polynomial(FieldType coefficient) : terms_{{{}, std::move(coefficient)}} {
+    Polynomial(FieldType coefficient) : terms_{{{}, std::move(coefficient)}} {
         Shrink_();
+    }
+
+    template<SuitableOrder<Monomial> OtherMonomialOrder>
+    Polynomial(const Polynomial<FieldType, OtherMonomialOrder> &other) {
+        for (const auto &term : other) {
+            terms_.insert(term);
+        }
     }
 
     [[nodiscard]] IndexType GetAmountOfTerms() const noexcept {
@@ -40,6 +48,10 @@ public:
     Term GetNthTerm(IndexType index) const {
         assert(index < terms_.size());
         return *std::next(begin(), index);
+    }
+
+    Term GetLeadingTerm() const {
+        return *begin();
     }
 
     Polynomial operator+() const {
@@ -173,6 +185,10 @@ public:
             return out;
         }
 
+        if (other.begin()->second < 0) {
+            out << "-";
+        }
+
         for (auto iter = other.begin(); iter != std::prev(other.end());) {
             PrintTerm(out, *iter++);
             out << (iter->second < 0 ? " - " : " + ");
@@ -183,25 +199,30 @@ public:
         return out;
     }
 
+    static Monomial &GetMonomial(const Term &term) {
+        return term.first;
+    }
+
+    static FieldType &GetCoefficient(const Term &term) {
+        return term.second;
+    }
+
 private:
     static void PrintTerm(std::ostream &out, const Term &term) {
-        if (Monomial::HasNoVariables(term.first)) {
-            out << term.second;
-            return;
-        }
-
         auto absCoefficient = abs(term.second);
         if (absCoefficient != 1) {
             out << absCoefficient;
         }
 
-        out << term.first;
+        if (!Monomial::HasNoVariables(term.first)) {
+            out << term.first;
+        }
     }
 
     void AddTerm_(const Term &term) {
         auto foundTerm = terms_.lower_bound(term.first);
 
-        if (foundTerm != terms_.end() && *foundTerm == term) {
+        if (foundTerm != terms_.end() && foundTerm->first == term.first) {
             foundTerm->second += term.second;
             if (foundTerm->second == 0) {
                 terms_.erase(foundTerm);
@@ -214,8 +235,9 @@ private:
     void SubtractTerm_(const Term &term) {
         auto foundTerm = terms_.lower_bound(term.first);
 
-        if (foundTerm != terms_.end() && *foundTerm == term) {
+        if (foundTerm != terms_.end() && foundTerm->first == term.first) {
             foundTerm->second -= term.second;
+
             if (foundTerm->second == 0) {
                 terms_.erase(foundTerm);
             }
@@ -259,7 +281,7 @@ struct Less {
     }
 };
 
-template<SuitableFieldType FieldType = Rational<>>
-using PolynomialSet = std::set<Polynomial<FieldType>, Less<FieldType>>;
+template<SuitableFieldType FieldType = Rational<>, SuitableOrder<Monomial> MonomialOrder = LexicographicalOrder>
+using PolynomialSet = std::set<Polynomial<FieldType, MonomialOrder>, Less<FieldType>>;
 
-}
+} // namespace GB

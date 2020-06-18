@@ -1,9 +1,9 @@
 #include <cassert>
 
 #include "rational.h"
-#include "overflow_detector.h"
 #include "monomial.h"
 #include "polynomial.h"
+#include "algorithms.h"
 
 #define EXPECT_TRUE(expression) assert(!!(expression))
 
@@ -125,11 +125,113 @@ namespace GB {
         EXPECT_EQUAL(p1 + p2, Polynomial({{{1, 2, 3}, 2}, {{0, 1}, 8}}));
         EXPECT_EQUAL(p1 - p2, Polynomial({{{0, 1}, 8}}));
         EXPECT_EQUAL(p1.GetAmountOfTerms(), 2ull);
-        EXPECT_EQUAL(p1.GetNthTerm(0), Term({1, 2, 3}, 1));
-
         EXPECT_DIFFERENT(p1, -p1);
 
         EXPECT_TRUE(Polynomial<>::IsZero(Polynomial {}));
+
+        {
+            Polynomial f1(Term{{1, 2}, 16});
+            Polynomial f2(Term{{1, 2}, -10});
+
+            EXPECT_EQUAL(f1 - f2, Polynomial(Term{{1, 2}, 26}));
+            EXPECT_EQUAL(f1 + f2, Polynomial(Term{{1, 2}, 6}));
+        }
+    }
+
+    void TestOrder() {
+        Polynomial<Rational<>, LexicographicalOrder> lexOrder({
+            {{1, 2, 3}, 1},
+            {{1, 2, 4}, 1},
+            {{2, 2, 2}, 1},
+            {{6, 0, 0}, 1}
+        });
+
+        Polynomial<Rational<>, ReverseLexicographicalOrder> revLexOrder = lexOrder;
+        Polynomial<Rational<>, GradedLexicographicalOrder> gradedLexOrder = lexOrder;
+        Polynomial<Rational<>, GradedReverseLexicographicalOrder> gradedRevLexOrder = lexOrder;
+
+        EXPECT_EQUAL(lexOrder.GetNthTerm(0), Term({6, 0, 0}, 1));
+        EXPECT_EQUAL(lexOrder.GetNthTerm(1), Term({2, 2, 2}, 1));
+        EXPECT_EQUAL(lexOrder.GetNthTerm(2), Term({1, 2, 4}, 1));
+        EXPECT_EQUAL(lexOrder.GetNthTerm(3), Term({1, 2, 3}, 1));
+
+        EXPECT_EQUAL(revLexOrder.GetNthTerm(0), Term({1, 2, 3}, 1));
+        EXPECT_EQUAL(revLexOrder.GetNthTerm(1), Term({1, 2, 4}, 1));
+        EXPECT_EQUAL(revLexOrder.GetNthTerm(2), Term({2, 2, 2}, 1));
+        EXPECT_EQUAL(revLexOrder.GetNthTerm(3), Term({6, 0, 0}, 1));
+
+        EXPECT_EQUAL(gradedLexOrder.GetNthTerm(0), Term({1, 2, 4}, 1));
+        EXPECT_EQUAL(gradedLexOrder.GetNthTerm(1), Term({6, 0, 0}, 1));
+        EXPECT_EQUAL(gradedLexOrder.GetNthTerm(2), Term({2, 2, 2}, 1));
+        EXPECT_EQUAL(gradedLexOrder.GetNthTerm(3), Term({1, 2, 3}, 1));
+
+        EXPECT_EQUAL(gradedRevLexOrder.GetNthTerm(0), Term({1, 2, 4}, 1));
+        EXPECT_EQUAL(gradedRevLexOrder.GetNthTerm(1), Term({1, 2, 3}, 1));
+        EXPECT_EQUAL(gradedRevLexOrder.GetNthTerm(2), Term({2, 2, 2}, 1));
+        EXPECT_EQUAL(gradedRevLexOrder.GetNthTerm(3), Term({6, 0, 0}, 1));
+    }
+
+    void TestAlgorithms() {
+        {
+            Polynomial p1({{{1, 1}, 1}, {{1}, 2}, {{0, 0, 1}, -1}});
+            Polynomial p2({{{2}, 1}, {{0, 1}, 2}, {{0, 0, 1}, -1}});
+            Polynomial expectedSPoly({{{2}, 2}, {{1, 0, 1}, -1}, {{0, 2}, -2}, {{0, 1, 1}, 1}});
+            EXPECT_EQUAL(SPolynomial(p1, p2), expectedSPoly);
+        }
+
+        {
+            Polynomial f({{1, 1, 1}, 1});
+            Polynomial g({{{1, 1}, 1}, {{0, 0, 0, 1}, -1}});
+            Polynomial expectedPolyReduction({{0, 0, 1, 1}, 1});
+            EXPECT_TRUE(ElementaryReduction(f, g));
+            EXPECT_EQUAL(f, expectedPolyReduction);
+        }
+
+        {
+            Polynomial f({{1, 1, 1}, 1});
+            Polynomial g({{{1, 0, 1}, 1}, {{0, 0, 0, 1}, -1}});
+            Polynomial expectedPolyReduction({{0, 1, 0, 1}, 1});
+            EXPECT_TRUE(ElementaryReduction(f, g));
+            EXPECT_EQUAL(f, expectedPolyReduction);
+        }
+
+        {
+            Polynomial f({{1, 0}, 1});
+            Polynomial g({{0, 1}, 1});
+            EXPECT_FALSE(ElementaryReduction(f, g));
+        }
+
+        {
+            Polynomial f1 = Polynomial(Term{{2}, 1}) + Polynomial(Term{{1}, -2}) +
+                           Polynomial(Term{{0, 2}, 1}) + Polynomial(Term{{0, 1}, -26}) + Polynomial(70);
+            Polynomial f2 = Polynomial(Term{{2}, 1}) + Polynomial(Term{{1}, -22}) +
+                           Polynomial(Term{{0, 2}, 1}) + Polynomial(Term{{0, 1}, -16}) + Polynomial(160);
+            Polynomial f3 = Polynomial(Term{{2}, 1}) + Polynomial(Term{{1}, -20}) +
+                           Polynomial(Term{{0, 2}, 1}) + Polynomial(Term{{0, 1}, -2}) + Polynomial(76);
+
+            PolynomialSet<> set = {f1, f2, f3};
+
+            BuhbergerAlgorithm(set);
+
+            for (const auto& i : set) {
+                std::cout << i << '\n';
+            }
+
+            std::cout << '\n';
+        }
+
+        {
+            Polynomial f1 = Polynomial(Term{{2}, 1}) + Polynomial(Term{{1}, 2}) - Polynomial(Term{{0, 1}, 4});
+            Polynomial f2 = Polynomial(Term{{0, 2}, 1}) + Polynomial(Term{{1, 1}, 1}) - Polynomial(Term{{1}, 1});
+
+            PolynomialSet<> set = {f1, f2};
+
+            BuhbergerAlgorithm(set);
+
+            for (const auto& i : set) {
+                std::cout << i << '\n';
+            }
+        }
     }
 
     void TestAll() {
@@ -137,6 +239,8 @@ namespace GB {
         TestOverflow();
         TestMonomial();
         TestPolynomial();
+        TestOrder();
+        TestAlgorithms();
     }
 
 } // namespace GB

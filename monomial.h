@@ -4,6 +4,7 @@
 
 #include <utility>
 #include <vector>
+#include <algorithm>
 
 namespace GB {
 
@@ -36,6 +37,10 @@ public:
         return degrees_;
     }
 
+    [[nodiscard]] DegreeType TotalDegree() const noexcept {
+        return std::accumulate(degrees_.begin(), degrees_.end(), DegreeType());
+    }
+
     Monomial &operator*=(const Monomial &other) {
         degrees_.resize(std::max(GetAmountOfVariables(), other.GetAmountOfVariables()));
 
@@ -47,7 +52,7 @@ public:
         return *this;
     }
 
-    bool IsDivisibleBy(const Monomial &other) const {
+    [[nodiscard]] bool IsDivisibleBy(const Monomial &other) const {
         if (other.GetAmountOfVariables() > GetAmountOfVariables()) {
             return false;
         }
@@ -91,7 +96,6 @@ public:
         return result;
     }
 
-    // TODO: Add monomial order class.
     friend bool operator<(const Monomial &lhs, const Monomial &rhs) {
         return lhs.degrees_ < rhs.degrees_;
     }
@@ -105,6 +109,12 @@ public:
     }
 
     friend std::ostream &operator<<(std::ostream &out, const Monomial &other) {
+
+        if (HasNoVariables(other)) {
+            out << "0";
+            return out;
+        }
+
         out << "(";
         PrintVariables_(out, other.degrees_);
         out << ")";
@@ -147,6 +157,5 @@ private:
 
     DegreeVector degrees_;
 };
-
 
 } // namespace GB
