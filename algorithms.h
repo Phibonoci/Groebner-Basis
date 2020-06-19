@@ -46,7 +46,7 @@ bool ElementaryReduction(
             termToDivide->second / other.GetLeadingTerm().second
     };
 
-    reducible -= Polynomial(quotient) * other;
+    reducible -= Polynomial<FieldType, MonomialOrder>(quotient) * other;
 
     return true;
 }
@@ -71,6 +71,7 @@ size_t ReductionOverSet(
         const PolynomialSet<FieldType, MonomialOrder> &other)
 {
     size_t reductionCount = 0;
+
     for (const auto &f : other) {
         reductionCount += ChainOfElementaryReductions(reducible, f);
     }
@@ -123,26 +124,6 @@ std::optional<Polynomial<FieldType, MonomialOrder>> CheckPair(
 }
 
 template<SuitableFieldType FieldType, SuitableOrder<Monomial> MonomialOrder>
-PolynomialSet<FieldType, MonomialOrder> FindPairs(const PolynomialSet<FieldType, MonomialOrder> &set) {
-    PolynomialSet<FieldType, MonomialOrder> suitablePairs;
-
-    for (const auto &first : set) {
-        for (const auto &second : set) {
-            if (first == second) {
-                break;
-            }
-
-            auto S = CheckPair(first, second, set);
-            if (S.has_value()) {
-                suitablePairs.insert(*S);
-            }
-        }
-    }
-
-    return suitablePairs;
-}
-
-template<SuitableFieldType FieldType, SuitableOrder<Monomial> MonomialOrder>
 size_t ReductionOverSameSet(PolynomialSet<FieldType, MonomialOrder> &set) {
     size_t reductionCount = 0;
 
@@ -152,7 +133,6 @@ size_t ReductionOverSameSet(PolynomialSet<FieldType, MonomialOrder> &set) {
         auto reducible = std::move(set.extract(set.begin()).value());
         reductionCount += ReductionOverSet(reducible, set);
         reductionCount += ReductionOverSet(reducible, reducedSet);
-
         if (reducible != Polynomial<FieldType, MonomialOrder>(0)) {
             reducedSet.insert(std::move(reducible));
         }
@@ -192,17 +172,61 @@ void OptimizeSet(PolynomialSet<FieldType, MonomialOrder> &set) {
 }
 
 template<SuitableFieldType FieldType, SuitableOrder<Monomial> MonomialOrder>
-void BuhbergerAlgorithm(PolynomialSet<FieldType, MonomialOrder> &set) {
-    auto polynomialsToAdd = FindPairs(set);
+PolynomialSet<FieldType, MonomialOrder> FindPairs(const PolynomialSet<FieldType, MonomialOrder> &set, size_t offset) {
+    PolynomialSet<FieldType, MonomialOrder> suitablePairs;
+
+    size_t firstIndex = 0, secondIndex = 0;
+
+    for (const auto &first : set) {
+        secondIndex = 0;
+        for (const auto &second : set) {
+            if (first == second) {
+                break;
+            }
+            if (firstIndex < offset && secondIndex < offset) {
+                continue;
+            }
+
+            auto S = CheckPair(first, second, set);
+
+            if (S.has_value()) {
+                suitablePairs.insert(*S);
+            }
+
+            ++secondIndex;
+        }
+        ++firstIndex;
+    }
+
+    return suitablePairs;
+}
+
+template<SuitableFieldType FieldType, SuitableOrder<Monomial> MonomialOrder>
+void BuchbergerAlgorithm(PolynomialSet<FieldType, MonomialOrder> &set) {
+    size_t offset = 0;
     OptimizeSet(set);
+    auto polynomialsToAdd = FindPairs(set, offset);
 
     while (!polynomialsToAdd.empty()) {
+        OptimizeSet(polynomialsToAdd);
+        offset += polynomialsToAdd.size();
         set.merge(polynomialsToAdd);
-        polynomialsToAdd = FindPairs(set);
+        polynomialsToAdd = FindPairs(set, offset);
         OptimizeSet(set);
     }
 }
 
-
+template<SuitableFieldType FieldType, SuitableOrder<Monomial> MonomialOrder>
+bool IsGroebnerBasis(PolynomialSet<FieldType, MonomialOrder> &set) {
+    for (const auto &first : set) {
+        for (const auto &second : set) {
+            auto S = CheckPair(first, second, set);
+            if (S.has_value()) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
 
 } // namespace GB
