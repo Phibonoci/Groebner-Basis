@@ -216,6 +216,8 @@ private:
 
         if (!Monomial::HasNoVariables(term.first)) {
             out << term.first;
+        } else {
+            out << absCoefficient;
         }
     }
 

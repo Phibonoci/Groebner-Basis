@@ -66,6 +66,14 @@ public:
         return true;
     }
 
+    void SetVariableDegree(const IndexType &index, const DegreeType &degree) {
+        if (index >= degrees_.size()) {
+            degrees_.resize(index + 1);
+        }
+        degrees_[index] = degree;
+        Shrink_();
+    }
+
     Monomial &operator/=(const Monomial &other) {
         if (other.GetAmountOfVariables() > GetAmountOfVariables()) {
             throw std::runtime_error("Monomial cannot be divided by another");

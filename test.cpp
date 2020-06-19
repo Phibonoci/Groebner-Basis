@@ -1,9 +1,9 @@
 #include <cassert>
 
-#include "rational.h"
-#include "monomial.h"
-#include "polynomial.h"
 #include "algorithms.h"
+#include "cyclic.h"
+
+#include <ctime>
 
 #define EXPECT_TRUE(expression) assert(!!(expression))
 
@@ -211,7 +211,7 @@ namespace GB {
 
             PolynomialSet<> set = {f1, f2, f3};
 
-            BuhbergerAlgorithm(set);
+            BuchbergerAlgorithm(set);
 
             for (const auto& i : set) {
                 std::cout << i << '\n';
@@ -226,11 +226,21 @@ namespace GB {
 
             PolynomialSet<> set = {f1, f2};
 
-            BuhbergerAlgorithm(set);
+            BuchbergerAlgorithm(set);
 
             for (const auto& i : set) {
                 std::cout << i << '\n';
             }
+        }
+    }
+
+    void Benchmark() {
+        for (int index = 1; index <= 8; ++index) {
+            PolynomialSet<> set = BuildCycleSet(index);
+            time_t cur = clock();
+            BuchbergerAlgorithm(set);
+            std::cout << "Cyclic_" << index << ":\tElapsed Time: \t"
+                      << static_cast<double>((clock() - cur)) / CLOCKS_PER_SEC << "\n";
         }
     }
 
@@ -240,7 +250,8 @@ namespace GB {
         TestMonomial();
         TestPolynomial();
         TestOrder();
-        TestAlgorithms();
+        //TestAlgorithms();
+        Benchmark();
     }
 
 } // namespace GB

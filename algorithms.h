@@ -157,7 +157,6 @@ size_t ReductionOverSameSet(PolynomialSet<FieldType, MonomialOrder> &set) {
             reducedSet.insert(std::move(reducible));
         }
     }
-
     set = std::move(reducedSet);
     return reductionCount;
 }
@@ -192,7 +191,7 @@ void OptimizeSet(PolynomialSet<FieldType, MonomialOrder> &set) {
 }
 
 template<SuitableFieldType FieldType, SuitableOrder<Monomial> MonomialOrder>
-void BuhbergerAlgorithm(PolynomialSet<FieldType, MonomialOrder> &set) {
+void BuchbergerAlgorithm(PolynomialSet<FieldType, MonomialOrder> &set) {
     auto polynomialsToAdd = FindPairs(set);
     OptimizeSet(set);
 
@@ -202,7 +201,5 @@ void BuhbergerAlgorithm(PolynomialSet<FieldType, MonomialOrder> &set) {
         OptimizeSet(set);
     }
 }
-
-
 
 } // namespace GB
