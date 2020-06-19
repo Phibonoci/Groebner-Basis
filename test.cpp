@@ -2,6 +2,7 @@
 
 #include "algorithms.h"
 #include "cyclic.h"
+#include "modular.h"
 
 #include <ctime>
 
@@ -235,21 +236,30 @@ namespace GB {
     }
 
     void Benchmark() {
-        for (int index = 1; index <= 8; ++index) {
-            PolynomialSet<> set = BuildCycleSet(index);
+        for (int index = 6; index <= 6; ++index) {
+            PolynomialSet<ModularInt<>, GradedReverseLexicographicalOrder> set = BuildCycleSet<ModularInt<>, GradedReverseLexicographicalOrder>(index);
+
             time_t cur = clock();
             BuchbergerAlgorithm(set);
             std::cout << "Cyclic_" << index << ":\tElapsed Time: \t"
                       << static_cast<double>((clock() - cur)) / CLOCKS_PER_SEC << "\n";
+
+            for (const auto &i : set) {
+                std::cout << i << "\n\n";
+            }
+
+            std::cout << set.size() << '\n';
+
+            assert(IsGroebnerBasis(set));
         }
     }
 
     void TestAll() {
-        TestRational();
-        TestOverflow();
-        TestMonomial();
-        TestPolynomial();
-        TestOrder();
+//        TestRational();
+//        TestOverflow();
+//        TestMonomial();
+//        TestPolynomial();
+//        TestOrder();
         //TestAlgorithms();
         Benchmark();
     }

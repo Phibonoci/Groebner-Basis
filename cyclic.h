@@ -32,12 +32,12 @@ Polynomial<FieldType, MonomialOrder> BuildElementaryCyclePolymonial(size_t n, si
 }
 
 template<SuitableFieldType FieldType = Rational<>, SuitableOrder<Monomial> MonomialOrder = LexicographicalOrder>
-PolynomialSet<FieldType, MonomialOrder> BuildCycleSet(size_t m) {
+PolynomialSet<FieldType, MonomialOrder> BuildWrongCycleSet(size_t m) {
     PolynomialSet<FieldType, MonomialOrder> ans;
     for (size_t n = 1; n <= m; ++n) {
         auto temp = BuildElementaryCyclePolymonial<FieldType, MonomialOrder>(n, m);
         if (n == m) {
-            temp += m % 2 == 1 ? FieldType(-1) : FieldType(1);
+            temp += m % 2 == 1 ? FieldType(1) : FieldType(-1);
         }
         ans.insert(std::move(temp));
     }
@@ -45,5 +45,42 @@ PolynomialSet<FieldType, MonomialOrder> BuildCycleSet(size_t m) {
     return ans;
 }
 
+template<SuitableFieldType FieldType, SuitableOrder<Monomial> MonomialOrder>
+Polynomial<FieldType, MonomialOrder> BuildCyclePolymonial(size_t n, size_t m) {
+    Polynomial<FieldType, MonomialOrder> f;
+    Monomial::DegreeVector temp(m);
+
+    for (size_t i = 0; i < n; ++i) {
+        temp[i] = 1;
+    }
+
+    f += Monomial(temp);
+
+    if (n == m) {
+        return f;
+    }
+
+    for (size_t i = 0; i < m - 1; ++i) {
+        temp[i] = 0;
+        temp[(i + n) % m] = 1;
+        f += Monomial(temp);
+    }
+
+    return f;
+}
+
+template<SuitableFieldType FieldType = Rational<>, SuitableOrder<Monomial> MonomialOrder = LexicographicalOrder>
+PolynomialSet<FieldType, MonomialOrder> BuildCycleSet(size_t m) {
+    PolynomialSet<FieldType, MonomialOrder> ans;
+    for (size_t n = 1; n <= m; ++n) {
+        auto temp = BuildCyclePolymonial<FieldType, MonomialOrder>(n, m);
+        if (n == m) {
+            temp += FieldType(-1);
+        }
+        ans.insert(std::move(temp));
+    }
+
+    return ans;
+}
 
 } // namespace GB

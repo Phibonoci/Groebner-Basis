@@ -12,14 +12,14 @@ struct LexicographicalOrder {
 
 struct ReverseLexicographicalOrder {
     bool operator()(const Monomial &lhs, const Monomial &rhs) const {
-        return rhs.GetDegrees() < lhs.GetDegrees();
+        return lhs.GetDegrees() > rhs.GetDegrees();
     }
 };
 
 struct GradedLexicographicalOrder {
     bool operator()(const Monomial &lhs, const Monomial &rhs) const {
-        auto lTotalDegree = lhs.TotalDegree();
-        auto rTotalDegree = rhs.TotalDegree();
+        auto lTotalDegree = lhs.GetTotalDegree();
+        auto rTotalDegree = rhs.GetTotalDegree();
 
         if (lTotalDegree == rTotalDegree) {
             LexicographicalOrder order;
@@ -32,8 +32,8 @@ struct GradedLexicographicalOrder {
 
 struct GradedReverseLexicographicalOrder {
     bool operator()(const Monomial &lhs, const Monomial &rhs) const {
-        auto lTotalDegree = lhs.TotalDegree();
-        auto rTotalDegree = rhs.TotalDegree();
+        auto lTotalDegree = lhs.GetTotalDegree();
+        auto rTotalDegree = rhs.GetTotalDegree();
 
         if (lTotalDegree == rTotalDegree) {
             ReverseLexicographicalOrder revOrder;

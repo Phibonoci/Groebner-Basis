@@ -17,10 +17,12 @@ public:
     Monomial() = default;
 
     Monomial(std::initializer_list<DegreeType> degrees) : degrees_(degrees) {
+        totalDegree_ = CalculateTotalDegree();
         Shrink_();
     }
 
     explicit Monomial(DegreeVector degrees) : degrees_(std::move(degrees)) {
+        totalDegree_ = CalculateTotalDegree();
         Shrink_();
     }
 
@@ -37,8 +39,12 @@ public:
         return degrees_;
     }
 
-    [[nodiscard]] DegreeType TotalDegree() const noexcept {
-        return std::accumulate(degrees_.begin(), degrees_.end(), DegreeType());
+    [[nodiscard]] DegreeType CalculateTotalDegree() const noexcept {
+        return std::accumulate(degrees_.begin(), degrees_.end(), DegreeType(0));
+    }
+
+    [[nodiscard]] DegreeType GetTotalDegree() const noexcept {
+        return totalDegree_;
     }
 
     Monomial &operator*=(const Monomial &other) {
@@ -46,6 +52,7 @@ public:
 
         for (IndexType variableIndex = 0; variableIndex < other.GetAmountOfVariables(); ++variableIndex) {
             degrees_[variableIndex] += other.GetDegree(variableIndex);
+            totalDegree_ += other.GetDegree(variableIndex);
         }
 
         Shrink_();
@@ -71,6 +78,7 @@ public:
             degrees_.resize(index + 1);
         }
         degrees_[index] = degree;
+        totalDegree_ += (degree - degrees_[index]);
         Shrink_();
     }
 
@@ -84,6 +92,7 @@ public:
                 throw std::runtime_error("Monomial cannot be divided by another");
             }
             degrees_[variableIndex] -= other.GetDegree(variableIndex);
+            totalDegree_ -= other.GetDegree(variableIndex);
         }
 
         Shrink_();
@@ -164,6 +173,7 @@ private:
     }
 
     DegreeVector degrees_;
+    DegreeType totalDegree_ = 0;
 };
 
 } // namespace GB
